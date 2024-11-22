@@ -1,7 +1,5 @@
 ---
-title: Trends in the prescribing of antihypertensive medications – can we see higher
-  prescribing in areas with an older demographic and reduced cardiovascular health
-  outcomes?
+title: Exploring the Relationship Between Deprivation, Cardiovascular Health, and Antihypertensive Prescriptions in Scotland
 author: "Brian Kim"
 date: "2024-11-01"
 output:
@@ -15,15 +13,16 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warnings=FALSE)
 
 ## Introduction
 
-Cardiovascular disesase(CVD) generally refers to conditions affecting the heart blood or vessels. The causes of CVD isn't just one but there are many risk factors that affect or chance of developing CVD. One of the strongest cuase of CVD is hypertension (high blood pressure) is associated with the strongest evidence for causation and has high prevalence of exposure. CVD's are leading cuase of death globally and in Scotland.
-And a big risk factor for hypertension and CVD is old age. Because of this importancce, My project aimed to investigate whether there was a trend in antihypertensive medication prescribing in areas wite more elder demographic. 
+Cardiovascular disesase (CVD) refers to group of conditions affecting the heart and blood vessels. CVD is the leading cause of death both globally and in Scotland, emphasizing the need to better understand their risk factors and treatment trends. The causes of CVD are multifactorial, with various risk factors contributing to its development. Among these, hypertension (high blood pressure) is commonly recognized as one of the strongest and most prevalent risk factor for CVD, with strong evidence supporting its causal relationship [(Fuchs and Whelton, 2020)](https://pubmed.ncbi.nlm.nih.gov/31865786/).
 
-older than 65 is set as "elder" in this case because thats how health guidelines usually define it. All the datasets were taken from Public Health Scotland Open Data. Data files used in this can be foudn files and specific data dictionaries here:
+To address this growing risk, this project aimed to explore whether there is a trend in antihypertensvie medication prescribing acrouss council ares in Scotland. Specifically, the study aimed to examine the relationship between prescribing patterns and key demogrpahic factors that influence this such as age and deprivation levels. Data was analyzed on the level of council area  in Scotland. Speficially my project focused on examining whehter trend exist in anitherpyensive medication prescring areas with higher proportion of adults or areas with higher "deprivation score" according to the 2020 Scottish Index of Multiple Deprivation (SIMD), were associated with increasing prescribing of antihypertensvie medications.
 
+For this report, "elderly" population refers to individuals aged 65 and older in alignment with common health guidelines. All datasets  used in this project and their respective data dictionaries were sourced from Public Health Scotland Open Data, which can be accessed here:
 https://www.opendata.nhs.scot/
 
-Because the Heart Disease Mortality only had data until year 2022 from 1st jan to dec 31. So I've chose to analyze the prescription data for October of 2022  prescriptions in the community in Scotland. Also because the latest datset for 2022 demographic data was oct 2022 GP data. 
-```{r}
+The analysis focused on prescription data from Octoboer 2022, as this period aligns with the most recent demographic data available from the Octoboer 2022 GP dataset and the Heart Disease Mortality dataset, which spans from January 1 to December 31, 2022. 
+
+```{r Loading Libraries}
 #Loading required libraries
 library(tidyverse)
 library(janitor)
@@ -32,7 +31,7 @@ library(stringr)
 library(here)
 ```
 
-## Loading Required Data and libraries
+## Prescription Dataset
 Started by loading the 2022 oct prescription data. Then also filter out for antihypertensive drugs. then also connect HB and join by HB and connect the council area (this file also has council name). So going to analyze by if there is differences in perscription of antihypertensives and the outcome depending on the council area by joining with heart outcome.
 
 First filtering for drug, there is too many different types of antihypertensive to cover everything. Thus, we're specifically going to look at brand name and drug name for Calcium channel blockers. Calcium channel blockers can reduce blood pressure by dilating the arteries and, in some cases, reducing the force of the heart's contractions. becausedata set seem to have both brand and drug name.
@@ -286,3 +285,9 @@ Strong positive correlation between older population and antihypertensive prescr
 The results showed a moderate positive correlation (r = 0.567), indicating that less deprived areas (higher SIMD rank) are associated with higher cardiovascular death rates. The correlation was statistically significant (p = 0.034). Results were counter intuitive with common belief because deprived areas are generally associated with poorer health. could be due to difference in acess to health care reporting.
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## References
+
+Fuchs, F.D. and Whelton, P.K. (2020). High Blood Pressure and Cardiovascular Disease. Hypertension, [online] 75(2), pp.285–292. doi:https://doi.org/10.1161/HYPERTENSIONAHA.119.14240.
+
+‌
