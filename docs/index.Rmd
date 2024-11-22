@@ -13,85 +13,101 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warnings=FALSE)
 ```
 
-## R Markdown
+## Introduction
 
-My topic wanted to explore whether there weas trend in antihypertensive medication (higher prscribing in areas with older demographic and whether the cardiovascular health outcome was removed). However due to R crashing everytime I would try to join the datasets (prescription with heart disease outcome, or linking council area by HB), I was not able to formulate a graph at this point. 
+Cardiovascular disesase(CVD) generally refers to conditions affecting the heart blood or vessels. The causes of CVD isn't just one but there are many risk factors that affect or chance of developing CVD. One of the strongest cuase of CVD is hypertension (high blood pressure) is associated with the strongest evidence for causation and has high prevalence of exposure. CVD's are leading cuase of death globally and in Scotland.
+And a big risk factor for hypertension and CVD is old age. Because of this importancce, My project aimed to investigate whether there was a trend in antihypertensive medication prescribing in areas wite more elder demographic. 
 
-First filtering for drug, there is too many different types of antihypertensive to cover everything. Thus, we're specifically going to look at brand name and drug name for Calcium channel blockers. Calcium channel blockers can reduce blood pressure by dilating the arteries and, in some cases, reducing the force of the heart's contractions. becausedata set seem to have both brand and drug name.
+older than 65 is set as "elder" in this case because thats how health guidelines usually define it. All the datasets were taken from Public Health Scotland Open Data. Data files used in this can be foudn files and specific data dictionaries here:
 
-#
-Here are a few points to consider as you continue to work on this:
+https://www.opendata.nhs.scot/
 
-- For reproducibility, please make sure to explain where the various datasets came from. Where possible, load the data straight from URL. 
-
-- Consider using read_csv() rather than read.csv(), to consistently stay within the tidyverse
-
-- When loading libraries, avoid redundancy (e.g. ggplot2 is part of the tidyverse, so you don't need to load it separately)
-
-- Make sure that your code doesn't run off the page (this should be less of an issue when you render to HTML)
-#
-  
-```{r cars}
-#Loading required stuff
-library(dplyr)
+Because the Heart Disease Mortality only had data until year 2022 from 1st jan to dec 31. So I've chose to analyze the prescription data for October of 2022  prescriptions in the community in Scotland. Also because the latest datset for 2022 demographic data was oct 2022 GP data. 
+```{r}
+#Loading required libraries
 library(tidyverse)
 library(janitor)
 library(gt)
 library(stringr)
 library(here)
+```
 
-prescriptions <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/oct2022per.csv") %>% 
-  clean_names()
-gp_demographic_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv") %>% 
-  clean_names()
-heart_mortality <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv") %>% 
-  clean_names()
-CA_HB <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>% 
-  clean_names()
-Healthboards_name <- read_csv(here("/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv")) %>%
+## Loading Required Data and libraries
+Started by loading the 2022 oct prescription data. Then also filter out for antihypertensive drugs. then also connect HB and join by HB and connect the council area (this file also has council name). So going to analyze by if there is differences in perscription of antihypertensives and the outcome depending on the council area by joining with heart outcome.
+
+First filtering for drug, there is too many different types of antihypertensive to cover everything. Thus, we're specifically going to look at brand name and drug name for Calcium channel blockers. Calcium channel blockers can reduce blood pressure by dilating the arteries and, in some cases, reducing the force of the heart's contractions. becausedata set seem to have both brand and drug name.
+
+```{r Prescription-dataset}
+
+#Loading 2022 October Prescription Dataset
+prescriptions_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/oct2022per.csv") %>% 
   clean_names()
 
-#filtering out hypertension drug (onward is still code but I've left it not as code cause of syntax error)
-
+#Filtering for calcium channel blockers 
 calcium_channel_blockers <- c("Norvasc", "Amlodipine", "Diltiazem", "Cardizem", "Tiazac", "Plendil", "Felodipine", "DynaCirc", "Isradipine", "Cardene", "Nicardipine", "Sular", "Nisoldipine",  "Verelan", "Covera HS", "Isoptin SR", "Verapamil", "Procardia XL", "Adalat CC", "Nifedipine") %>% 
-  toupper()
+  toupper() #to make all letters uppercase
 
 paste(calcium_channel_blockers, collapse = "|")
 
-filtered_data <- prescriptions %>% 
+filtered_prescriptions <- prescriptions_data %>% 
   filter(str_detect(bnf_item_description, paste(calcium_channel_blockers, collapse = "|"))) %>% 
-  filter(hbt != "SB0806") %>% 
-  select(gp_practice, hbt, bnf_item_description, paid_quantity)
+  filter(hbt != "SB0806") %>% #SB0806 indicate medication prescribed by Ambulance so filtered out cuz not related to CA
+  select(gp_practice, hbt, bnf_item_description, paid_quantity) #filtering only the columns we're interested in
 
+```
+
+GP demographic data was then loaded and dealt with. As mentioned above to filter out the elder demographic filtered for people above 65. This was done by summing up population over 65 years old per GP (based on gp code) and then joining by gp code to the prescription dataset.
+
+```{r GP-demographic}
+gp_demographic_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv") %>% 
+  clean_names()
 
 #filtering for age 65+ in GP demographic data then joining to perscription
 
-gp_2 <- gp_demographic_data %>% 
+filtered_gp <- gp_demographic_data %>% 
   mutate(over_65 = ages65to74 + ages75to84 + ages85plus) %>%   
   select(practice_code, hb, hscp, over_65) %>%  
   group_by(practice_code) %>% 
   summarise(over_65_total = sum(over_65, na.rm = TRUE)) 
-prescriptions_age <- filtered_data %>% 
-  left_join(gp_2, by = join_by(gp_practice == practice_code)) 
 
-#adding HB name
+#Joining GP_demographic data to prescription data
+prescriptions_age <- filtered_prescriptions %>% 
+  left_join(filtered_gp, by = join_by(gp_practice == practice_code)) 
+```
+
+Then healthboard names were joined by 
+```{r}
+#loading healthboard name data
+Healthboards_name <- read_csv(here("/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv")) %>%
+  clean_names()
+#adding HB name to prescription set with age
 New_HB_name <- Healthboards_name %>% 
   rename(hbt = hb) %>% 
   select(hbt, hb_name)
 
 joined_data <- prescriptions_age %>% 
   left_join(New_HB_name, join_by(hbt))
+```
 
+Then Council Area (CA) was joined. First loaded a dataset that
+```{r}
+CA_HB <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>% 
+  clean_names()
 #joining Council area by healthboard code
 
 CA_HB_2 <- CA_HB %>% 
-  select(hb_name, ca_name) %>% 
+  select(hb_name, ca_name, ca) %>% 
   group_by(hb_name) %>% 
   summarize(council_area = paste(unique(ca_name), collapse = ", "))
 
 prescriptions_age_ca <- joined_data %>% 
   left_join(CA_HB_2, by = join_by(hb_name))
-            
+```
+
+Lastly mortality rate from CVD was added
+```{r}
+heart_mortality <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv") %>% 
+  clean_names()
 #joining heart disease outcome by hb code
 
 Heart2 <- heart_mortality %>% 
@@ -99,33 +115,174 @@ Heart2 <- heart_mortality %>%
   filter(grepl('75plus years|65-74 years', age_group)) %>% 
   filter(year == 2022) %>% 
   group_by(hbr) %>% 
-  summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE)) 
+  summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE))
+  #filter(over_65_total_death > 0)
+```
+
+
+```{r}
+#creating a column that has number of populatino for council area
+over65_summary <- prescriptions_age_ca %>% 
+  select(council_area, gp_practice, over_65_total) %>% 
+  distinct() %>%  
+  group_by(council_area) %>% 
+  summarise(over65_CA = sum(over_65_total, na.rm = TRUE))
+
+#prescriptions_age_ca_2 <- prescriptions_age_ca %>% 
+ # left_join(over65_summary, by = "council_area")
+
+#fii
 joined_data_final <- prescriptions_age_ca %>% 
-  left_join(Heart2, by = join_by(hbt == hbr))
+  left_join(over65_summary, by = "council_area") %>%  
+  left_join(Heart2, by = join_by(hbt == hbr)) %>% 
+  group_by(council_area) %>% 
+  summarise(
+    paid_quantity = sum(paid_quantity, na.rm = TRUE),
+    over65_CA = first(over65_CA),
+    over65_total_death = first(over_65_total_death, na_rm = TRUE)
+  )
+
+
+#making table
+
+joined_data_final %>% 
+  mutate(prescriptions_per_death = round(paid_quantity / over65_total_death, 1)) %>%
+  select(
+    council_area,
+    over65_CA,
+    paid_quantity,
+    over65_total_death,
+    prescriptions_per_death
+  ) %>%
+  arrange(desc(prescriptions_per_death)) %>%
+  gt() %>%
+  tab_header(
+    title = "Prescriptions per Cardiovascular Death by Council Area"
+  ) %>%
+  fmt_number(columns = c(paid_quantity, over65_total_death), decimals = 0) %>%
+  fmt_number(columns = prescriptions_per_death, decimals = 1) %>%
+  cols_label(
+    council_area = "Council Area",
+    over65_CA = "Elderly Population",
+    paid_quantity = "Total Prescriptions",
+    over65_total_death = "Cardiovascular Deaths",
+    prescriptions_per_death = "Prescriptions per Death"
+  ) %>%
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  ) %>%
+  tab_source_note(
+    source_note = "Data source: Prescription and mortality datasets."
+  )
+
+
+#scatter plot
+ggplot(joined_data_final, aes(x = over65_CA, y = paid_quantity)) +
+  geom_point(color = "blue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Relationship Between Over-65 Population and Prescriptions",
+       x = "Over-65 Population",
+       y = "Total Prescriptions") +
+  theme_minimal()
+
+
+ggplot(joined_data_final, aes(x = over65_CA, y = over65_total_death, size = paid_quantity)) +
+  geom_point(alpha = 0.6, color = "purple") +
+  labs(title = "Relationship Between Older Population, Deaths, and Prescriptions",
+       x = "Population Aged 65+",
+       y = "Cardiovascular Deaths",
+       size = "Prescriptions") +
+  theme_minimal()
+
+
+#scatter different by color
+
+
+ggplot(joined_data_final, aes(x = over65_CA, y = over65_total_death, size = paid_quantity, color = council_area)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Relationship Between Older Population, Deaths, and Prescriptions",
+    x = "Population Aged 65+",
+    y = "Cardiovascular Deaths",
+    size = "Prescriptions",
+    color = "Council Area"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 8)
+  )
+
+
+#Kable
+library(knitr)
+library(kableExtra)
 
 
 
-#making plots
 
-
-
-#length(unique(prescriptions[,"HBT"])) 
-#length(unique(heart_mortality[,"HBR"])) 
-#sorted_unique_values <- sort(unique(CA_HB$HB))
-#print(sorted_unique_values)
-
-#one HB in the perscription can be ambulance so have to check the HB code
 
 ```
 
-older than 65 is set as "elder" in this case because thats how health guidelines usually define it. So all the age data other than above 65 was filtered out and joined together by HB. Then also filter out for antihypertensive drugs. then also connect HB and join by HB and connect the council area (this file also has council name). So going to analyze by if there is differences in perscription of antihypertensives and the outcome depending on the council area by joining with heart outcome.
 
-## Including Plots
+#include stuff about at the end analysis about how CVD occurs more often in lower income more deprived areas and link it to SIMD data. just mention with references. and compare to see if trend makes sense or not to see if more prescription occurred in areas with higher SIMD 
 
-You can also embed plots, for example:
+#I've made coucnil are that are under same healthbaord into one row, treating them as one region for the analysis. Thus
+```{r}
+SIMD <- read_csv(here("/Users/Studnet Data/Year 4/data_science/B138584/data/SIMD.csv")) %>%
+  clean_names()
+
+#Filtering out SIMD and linking to CA
+SIMD_Filtered <- SIMD %>% 
+  left_join(New_HB_name, by = join_by(hb == hbt)) %>%
+  select(hb_name, simd2020v2ca_quintile) %>%
+  group_by(hb_name) %>% 
+  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE))
+
+SiMD_CA_relation <- SIMD_Filtered %>%   
+  left_join(CA_HB_2, by = join_by(hb_name)) 
+
+Joined_FINALL <- joined_data_final %>% 
+  left_join(SiMD_CA_relation, by = join_by(council_area)) 
+
+
+```
+
+
+
+## Correlation Analysis
+
+Pearson analysis was used because it is good tu se for continuous variables (Citation). Correlation tests to see relatinoship.
+
+```{r}
+# Select numeric variables
+#Correlation test: Older population vs. Prescriptions
+cor_test_older <- cor.test(Joined_FINALL$over65_CA, joined_data_final$paid_quantity, method = "pearson")
+cor_test_older
+
+# Correlation test: Deprivation vs. Prescriptions
+cor_test_deprivation <- cor.test(Joined_FINALL$mean_simd_rank, joined_data_final$paid_quantity, method = "pearson")
+
+# Print the result
+print(cor_test_deprivation)
+
+# Correlation test: Deprivation vs. Cardiovascular Deaths
+cor_test_cvd <- cor.test(Joined_FINALL$mean_simd_rank, joined_data_final$over65_total_death, method = "pearson")
+
+# Print the result
+print(cor_test_cvd)
+```
 
 ```{r pressure, echo=FALSE}
 
+
+
 ```
+
+Strong positive correlation between older population and antihypertensive prescription (r =0.98, p = 3.49e-11) and deprivation and prescription was moderate positive correlation suggesting less deprived areas might be associated with higher antihypertensive medication. However correlation was not statitically significant. (r=0.49, p = 0.07), 
+
+The results showed a moderate positive correlation (r = 0.567), indicating that less deprived areas (higher SIMD rank) are associated with higher cardiovascular death rates. The correlation was statistically significant (p = 0.034). Results were counter intuitive with common belief because deprived areas are generally associated with poorer health. could be due to difference in acess to health care reporting.
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
