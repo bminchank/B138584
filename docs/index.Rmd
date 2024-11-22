@@ -13,21 +13,21 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warnings=FALSE)
 
 ## Introduction
 
-Cardiovascular disesase (CVD) refers to group of conditions affecting the heart and blood vessels. CVD is the leading cause of death both globally and in Scotland, emphasizing the need to better understand their risk factors and treatment trends. The causes of CVD are multifactorial, with various risk factors contributing to its development. Among these, hypertension (high blood pressure) is commonly recognized as one of the strongest and most prevalent risk factor for CVD, with strong evidence supporting its causal relationship [(Fuchs and Whelton, 2020)](https://pubmed.ncbi.nlm.nih.gov/31865786/).
+Cardiovascular disesase (CVD) refers to group of conditions affecting the heart and blood vessels. CVD is the leading cause of death both globally and in Scotland [(British Heart Foundation, 2018)](https://www.bhf.org.uk/for-professionals/healthcare-professionals/data-and-statistics/the-cvd-challenge/the-cvd-challenge-in-scotland), emphasizing the need to better understand their risk factors and treatment trends. The causes of CVD are multifactorial, with various risk factors contributing to its development. Among these, hypertension (high blood pressure) is commonly recognized as one of the strongest and most prevalent risk factor for CVD, with strong evidence supporting its causal relationship [(Fuchs and Whelton, 2020)](https://pubmed.ncbi.nlm.nih.gov/31865786/).
 
 To address this growing risk, this project aimed to explore whether there is a trend in antihypertensvie medication prescribing acrouss council ares in Scotland. Specifically, the study aimed to examine the relationship between prescribing patterns and key demogrpahic factors that influence this such as age and deprivation levels. Data was analyzed on the level of council area  in Scotland. Speficially my project focused on examining whehter trend exist in anitherpyensive medication prescring areas with higher proportion of adults or areas with higher "deprivation score" according to the 2020 Scottish Index of Multiple Deprivation (SIMD), were associated with increasing prescribing of antihypertensvie medications.
 
 For this report, "elderly" population refers to individuals aged 65 and older in alignment with common health guidelines. All datasets  used in this project and their respective data dictionaries were sourced from Public Health Scotland Open Data, which can be accessed here:
 https://www.opendata.nhs.scot/
 
-The analysis focused on prescription data from Octoboer 2022, as this period aligns with the most recent demographic data available from the Octoboer 2022 GP dataset and the Heart Disease Mortality dataset, which spans from January 1 to December 31, 2022. 
+The scope of this report was limited to 2022 mainly because the heart diseease mortality dataset the most recent data was 2022 jan 1 to dec 31. Also because the GP demographic dataset most recent in 2022 was october, so i've chose to analyze the octoboer 2022 prescription dataset.
+
 
 ```{r Loading Libraries}
 #Loading required libraries
 library(tidyverse)
 library(janitor)
 library(gt)
-library(stringr)
 library(here)
 ```
 
@@ -253,7 +253,7 @@ Joined_FINALL <- joined_data_final %>%
 
 ## Correlation Analysis
 
-Pearson analysis was used because it is good tu se for continuous variables (Citation). Correlation tests to see relatinoship.
+Pearson analysis was used because it is good tu se for continuous variables [(Sereno, 2021)](https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/). Correlation tests to see relatinoship.
 
 ```{r}
 # Select numeric variables
@@ -288,6 +288,8 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 ## References
 
+British Heart Foundation (2018). The CVD Challenge in Scotland. [online] British Heart Foundation. Available at: https://www.bhf.org.uk/for-professionals/healthcare-professionals/data-and-statistics/the-cvd-challenge/the-cvd-challenge-in-scotland.
+
 Fuchs, F.D. and Whelton, P.K. (2020). High Blood Pressure and Cardiovascular Disease. Hypertension, [online] 75(2), pp.285–292. doi:https://doi.org/10.1161/HYPERTENSIONAHA.119.14240.
 
-‌
+Sereno (2021). Pearson vs Spearman Correlation | Comparison b/w Spearman & Pearson. [online] Analytics Vidhya. Available at: https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/.
