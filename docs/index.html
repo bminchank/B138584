@@ -386,77 +386,90 @@ of antihypertensvie medications.</p>
 and older in alignment with common health guidelines. All datasets used
 in this project and their respective data dictionaries were sourced from
 Public Health Scotland Open Data, which can be accessed here: <a href="https://www.opendata.nhs.scot/" class="uri">https://www.opendata.nhs.scot/</a></p>
-<p>The scope of this report was limited to 2022 mainly because the heart
-diseease mortality dataset the most recent data was 2022 jan 1 to dec
-31. Also because the GP demographic dataset most recent in 2022 was
-october, so i’ve chose to analyze the octoboer 2022 prescription
-dataset.</p>
+<p>The time scope of this report is limited to 2022, mainly because the
+most recent heart disease mortality data available was between January 1
+to December 31, 2022. Additionally, the most recent GP demographic
+dataset for 2022 was from October, which is why the October 2022
+prescription dataset was chosen for analysis.</p>
 <pre class="r"><code>#Loading required libraries
 library(tidyverse)
 library(janitor)
 library(gt)
 library(here)</code></pre>
 </div>
-<div id="prescription-dataset" class="section level2">
-<h2>Prescription Dataset</h2>
-<p>Started by loading the 2022 oct prescription data. Then also filter
-out for antihypertensive drugs. then also connect HB and join by HB and
-connect the council area (this file also has council name). So going to
-analyze by if there is differences in perscription of antihypertensives
-and the outcome depending on the council area by joining with heart
-outcome.</p>
-<p>First filtering for drug, there is too many different types of
-antihypertensive to cover everything. Thus, we’re specifically going to
-look at brand name and drug name for Calcium channel blockers. Calcium
-channel blockers can reduce blood pressure by dilating the arteries and,
-in some cases, reducing the force of the heart’s contractions.
-becausedata set seem to have both brand and drug name.</p>
-<pre class="r"><code>#Loading 2022 October Prescription Dataset
+<div id="refining-prescription-data" class="section level2">
+<h2>Refining Prescription Data</h2>
+<p>To start with, the 2022 October prescription dataset was loaded and
+cleansed. Given the large variety of antihypertensive drugs, the scope
+was narrowed down to just calcium channel blockers, including both the
+brand and generic names. Finally, dataset was refined to include only
+the columns of interest.</p>
+<pre class="r"><code>#Loading 2022 october prescription data
 prescriptions_data &lt;- read_csv(&quot;/Users/Studnet Data/Year 4/data_science/B138584/data/oct2022per.csv&quot;) %&gt;% 
   clean_names()
 
-#Filtering for calcium channel blockers 
+#Defining calcium channel blockers to filter in data
 calcium_channel_blockers &lt;- c(&quot;Norvasc&quot;, &quot;Amlodipine&quot;, &quot;Diltiazem&quot;, &quot;Cardizem&quot;, &quot;Tiazac&quot;, &quot;Plendil&quot;, &quot;Felodipine&quot;, &quot;DynaCirc&quot;, &quot;Isradipine&quot;, &quot;Cardene&quot;, &quot;Nicardipine&quot;, &quot;Sular&quot;, &quot;Nisoldipine&quot;,  &quot;Verelan&quot;, &quot;Covera HS&quot;, &quot;Isoptin SR&quot;, &quot;Verapamil&quot;, &quot;Procardia XL&quot;, &quot;Adalat CC&quot;, &quot;Nifedipine&quot;) %&gt;% 
-  toupper() #to make all letters uppercase
+  toupper() #Convert all names to uppercase 
 
-paste(calcium_channel_blockers, collapse = &quot;|&quot;)</code></pre>
-<pre><code>## [1] &quot;NORVASC|AMLODIPINE|DILTIAZEM|CARDIZEM|TIAZAC|PLENDIL|FELODIPINE|DYNACIRC|ISRADIPINE|CARDENE|NICARDIPINE|SULAR|NISOLDIPINE|VERELAN|COVERA HS|ISOPTIN SR|VERAPAMIL|PROCARDIA XL|ADALAT CC|NIFEDIPINE&quot;</code></pre>
-<pre class="r"><code>filtered_prescriptions &lt;- prescriptions_data %&gt;% 
+#Filtering the Prescription data
+filtered_prescriptions &lt;- prescriptions_data %&gt;% 
   filter(str_detect(bnf_item_description, paste(calcium_channel_blockers, collapse = &quot;|&quot;))) %&gt;% 
-  filter(hbt != &quot;SB0806&quot;) %&gt;% #SB0806 indicate medication prescribed by Ambulance so filtered out cuz not related to CA
+  filter(hbt != &quot;SB0806&quot;) %&gt;% # Exclude ambulance prescriptions (hbt = SB0806)
   select(gp_practice, hbt, bnf_item_description, paid_quantity) #filtering only the columns we&#39;re interested in</code></pre>
-<p>GP demographic data was then loaded and dealt with. As mentioned
-above to filter out the elder demographic filtered for people above 65.
-This was done by summing up population over 65 years old per GP (based
-on gp code) and then joining by gp code to the prescription dataset.</p>
-<pre class="r"><code>gp_demographic_data &lt;- read_csv(&quot;/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv&quot;) %&gt;% 
+</div>
+<div id="merging-gp-population-demographic-data" class="section level2">
+<h2>Merging GP Population Demographic Data</h2>
+<p>The dataset with GP population demographic was then loaded and
+processed to identify the number of elderly population. This was
+achieved by summing the population over 65 years old for each GP
+practice. The resulting dataset was then joined with the filtered
+prescription dataset based on GP codes.</p>
+<pre class="r"><code>#Loading GP demographic data
+gp_demographic_data &lt;- read_csv(&quot;/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv&quot;) %&gt;% 
   clean_names()
 
-#filtering for age 65+ in GP demographic data then joining to perscription
-
+#Calculating number of elderly population per GP
 filtered_gp &lt;- gp_demographic_data %&gt;% 
   mutate(over_65 = ages65to74 + ages75to84 + ages85plus) %&gt;%   
   select(practice_code, hb, hscp, over_65) %&gt;%  
   group_by(practice_code) %&gt;% 
   summarise(over_65_total = sum(over_65, na.rm = TRUE)) 
 
-#Joining GP_demographic data to prescription data
+#Joining GP demographic data to prescription data
 prescriptions_age &lt;- filtered_prescriptions %&gt;% 
   left_join(filtered_gp, by = join_by(gp_practice == practice_code)) </code></pre>
-<p>Then healthboard names were joined by</p>
-<pre class="r"><code>#loading healthboard name data
-Healthboards_name &lt;- read_csv(here(&quot;/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv&quot;)) %&gt;%
-  clean_names()
-#adding HB name to prescription set with age
-New_HB_name &lt;- Healthboards_name %&gt;% 
+</div>
+<div id="merging-healthboard-and-council-area-data" class="section level2">
+<h2>Merging Healthboard and Council Area Data</h2>
+<p>Then Health Board (HB) names dataset was loaded to add the
+corresponding HB names to the prescription dataset. The HB Codes were
+renamed and selected to match the prescription dataset, and two dataset
+were joined.</p>
+<pre class="r"><code>#Loading Health Board name data
+healthboards_name &lt;- read_csv(here(&quot;/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv&quot;)) %&gt;%
+  clean_names() 
+
+#Preparing HB name data for joining
+filtered_hb_name &lt;- healthboards_name %&gt;% 
   rename(hbt = hb) %&gt;% 
   select(hbt, hb_name)
 
-joined_data &lt;- prescriptions_age %&gt;% 
-  left_join(New_HB_name, join_by(hbt))</code></pre>
-<p>Then Council Area (CA) was joined. First loaded a dataset that</p>
-<pre class="r"><code>CA_HB &lt;- read_csv(&quot;/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv&quot;) %&gt;% 
+#Joining HB names with prescription dataset by HB code
+prescriptions_age_hb &lt;- prescriptions_age %&gt;% 
+  left_join(filtered_hb_name, join_by(hbt))</code></pre>
+<p>Then, the council area (CA) information was added. the CA_HB dataset,
+which links council areas to health boards, was loaded and processed to
+ensure the correct mapping of council area names to their respective
+healthboards. the council area names were grouped and concatenated by
+their respective healthboard before being joined with the prescription
+dataset. This step was done because different council area share the
+same HB code therefore if join by HB code it will create many new data
+which was not present in the original dataset. So did it by grouping all
+councail area in the respective healthbaord.</p>
+<pre class="r"><code>CA_HB &lt;- read_csv(&quot;/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv&quot;) %&gt;%
   clean_names()
+
 #joining Council area by healthboard code
 
 CA_HB_2 &lt;- CA_HB %&gt;% 
@@ -464,7 +477,7 @@ CA_HB_2 &lt;- CA_HB %&gt;%
   group_by(hb_name) %&gt;% 
   summarize(council_area = paste(unique(ca_name), collapse = &quot;, &quot;))
 
-prescriptions_age_ca &lt;- joined_data %&gt;% 
+prescriptions_age_hb_ca &lt;- prescriptions_age_hb %&gt;% 
   left_join(CA_HB_2, by = join_by(hb_name))</code></pre>
 <p>Lastly mortality rate from CVD was added</p>
 <pre class="r"><code>heart_mortality &lt;- read_csv(&quot;/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv&quot;) %&gt;% 
@@ -479,7 +492,7 @@ Heart2 &lt;- heart_mortality %&gt;%
   summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE))
   #filter(over_65_total_death &gt; 0)</code></pre>
 <pre class="r"><code>#creating a column that has number of populatino for council area
-over65_summary &lt;- prescriptions_age_ca %&gt;% 
+over65_summary &lt;- prescriptions_age_hb_ca %&gt;% 
   select(council_area, gp_practice, over_65_total) %&gt;% 
   distinct() %&gt;%  
   group_by(council_area) %&gt;% 
@@ -489,7 +502,7 @@ over65_summary &lt;- prescriptions_age_ca %&gt;%
  # left_join(over65_summary, by = &quot;council_area&quot;)
 
 #fii
-joined_data_final &lt;- prescriptions_age_ca %&gt;% 
+joined_data_final &lt;- prescriptions_age_hb_ca %&gt;% 
   left_join(over65_summary, by = &quot;council_area&quot;) %&gt;%  
   left_join(Heart2, by = join_by(hbt == hbr)) %&gt;% 
   group_by(council_area) %&gt;% 
@@ -532,20 +545,20 @@ joined_data_final %&gt;%
   tab_source_note(
     source_note = &quot;Data source: Prescription and mortality datasets.&quot;
   )</code></pre>
-<div id="fhzukyfqnb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#fhzukyfqnb table {
+<div id="oxrbtklouh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#oxrbtklouh table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#fhzukyfqnb thead, #fhzukyfqnb tbody, #fhzukyfqnb tfoot, #fhzukyfqnb tr, #fhzukyfqnb td, #fhzukyfqnb th {
+#oxrbtklouh thead, #oxrbtklouh tbody, #oxrbtklouh tfoot, #oxrbtklouh tr, #oxrbtklouh td, #oxrbtklouh th {
 border-style: none;
 }
-#fhzukyfqnb p {
+#oxrbtklouh p {
 margin: 0;
 padding: 0;
 }
-#fhzukyfqnb .gt_table {
+#oxrbtklouh .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -570,11 +583,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_caption {
+#oxrbtklouh .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#fhzukyfqnb .gt_title {
+#oxrbtklouh .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -585,7 +598,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#fhzukyfqnb .gt_subtitle {
+#oxrbtklouh .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -596,7 +609,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#fhzukyfqnb .gt_heading {
+#oxrbtklouh .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -607,12 +620,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_bottom_border {
+#oxrbtklouh .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_col_headings {
+#oxrbtklouh .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -626,7 +639,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_col_heading {
+#oxrbtklouh .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -645,7 +658,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#fhzukyfqnb .gt_column_spanner_outer {
+#oxrbtklouh .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -656,13 +669,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#fhzukyfqnb .gt_column_spanner_outer:first-child {
+#oxrbtklouh .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#fhzukyfqnb .gt_column_spanner_outer:last-child {
+#oxrbtklouh .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#fhzukyfqnb .gt_column_spanner {
+#oxrbtklouh .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -673,10 +686,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#fhzukyfqnb .gt_spanner_row {
+#oxrbtklouh .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#fhzukyfqnb .gt_group_heading {
+#oxrbtklouh .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -701,7 +714,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#fhzukyfqnb .gt_empty_group_heading {
+#oxrbtklouh .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -715,13 +728,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#fhzukyfqnb .gt_from_md > :first-child {
+#oxrbtklouh .gt_from_md > :first-child {
 margin-top: 0;
 }
-#fhzukyfqnb .gt_from_md > :last-child {
+#oxrbtklouh .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#fhzukyfqnb .gt_row {
+#oxrbtklouh .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -739,7 +752,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#fhzukyfqnb .gt_stub {
+#oxrbtklouh .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -751,7 +764,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fhzukyfqnb .gt_stub_row_group {
+#oxrbtklouh .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -764,13 +777,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#fhzukyfqnb .gt_row_group_first td {
+#oxrbtklouh .gt_row_group_first td {
 border-top-width: 2px;
 }
-#fhzukyfqnb .gt_row_group_first th {
+#oxrbtklouh .gt_row_group_first th {
 border-top-width: 2px;
 }
-#fhzukyfqnb .gt_summary_row {
+#oxrbtklouh .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -779,14 +792,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fhzukyfqnb .gt_first_summary_row {
+#oxrbtklouh .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_first_summary_row.thick {
+#oxrbtklouh .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#fhzukyfqnb .gt_last_summary_row {
+#oxrbtklouh .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -795,7 +808,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_grand_summary_row {
+#oxrbtklouh .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -804,7 +817,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fhzukyfqnb .gt_first_grand_summary_row {
+#oxrbtklouh .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -813,7 +826,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_last_grand_summary_row_top {
+#oxrbtklouh .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -822,10 +835,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_striped {
+#oxrbtklouh .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#fhzukyfqnb .gt_table_body {
+#oxrbtklouh .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -833,7 +846,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_footnotes {
+#oxrbtklouh .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -846,7 +859,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_footnote {
+#oxrbtklouh .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -854,7 +867,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fhzukyfqnb .gt_sourcenotes {
+#oxrbtklouh .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -867,64 +880,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#fhzukyfqnb .gt_sourcenote {
+#oxrbtklouh .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fhzukyfqnb .gt_left {
+#oxrbtklouh .gt_left {
 text-align: left;
 }
-#fhzukyfqnb .gt_center {
+#oxrbtklouh .gt_center {
 text-align: center;
 }
-#fhzukyfqnb .gt_right {
+#oxrbtklouh .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#fhzukyfqnb .gt_font_normal {
+#oxrbtklouh .gt_font_normal {
 font-weight: normal;
 }
-#fhzukyfqnb .gt_font_bold {
+#oxrbtklouh .gt_font_bold {
 font-weight: bold;
 }
-#fhzukyfqnb .gt_font_italic {
+#oxrbtklouh .gt_font_italic {
 font-style: italic;
 }
-#fhzukyfqnb .gt_super {
+#oxrbtklouh .gt_super {
 font-size: 65%;
 }
-#fhzukyfqnb .gt_footnote_marks {
+#oxrbtklouh .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#fhzukyfqnb .gt_asterisk {
+#oxrbtklouh .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#fhzukyfqnb .gt_indent_1 {
+#oxrbtklouh .gt_indent_1 {
 text-indent: 5px;
 }
-#fhzukyfqnb .gt_indent_2 {
+#oxrbtklouh .gt_indent_2 {
 text-indent: 10px;
 }
-#fhzukyfqnb .gt_indent_3 {
+#oxrbtklouh .gt_indent_3 {
 text-indent: 15px;
 }
-#fhzukyfqnb .gt_indent_4 {
+#oxrbtklouh .gt_indent_4 {
 text-indent: 20px;
 }
-#fhzukyfqnb .gt_indent_5 {
+#oxrbtklouh .gt_indent_5 {
 text-indent: 25px;
 }
-#fhzukyfqnb .katex-display {
+#oxrbtklouh .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#fhzukyfqnb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#oxrbtklouh div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -1072,7 +1085,7 @@ treating them as one region for the analysis. Thus</p>
 
 #Filtering out SIMD and linking to CA
 SIMD_Filtered &lt;- SIMD %&gt;% 
-  left_join(New_HB_name, by = join_by(hb == hbt)) %&gt;%
+  left_join(filtered_hb_name, by = join_by(hb == hbt)) %&gt;%
   select(hb_name, simd2020v2ca_quintile) %&gt;%
   group_by(hb_name) %&gt;% 
   summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE))

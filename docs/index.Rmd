@@ -20,8 +20,7 @@ To address this growing risk, this project aimed to explore whether there is a t
 For this report, "elderly" population refers to individuals aged 65 and older in alignment with common health guidelines. All datasets  used in this project and their respective data dictionaries were sourced from Public Health Scotland Open Data, which can be accessed here:
 https://www.opendata.nhs.scot/
 
-The scope of this report was limited to 2022 mainly because the heart diseease mortality dataset the most recent data was 2022 jan 1 to dec 31. Also because the GP demographic dataset most recent in 2022 was october, so i've chose to analyze the octoboer 2022 prescription dataset.
-
+The time scope of this report is limited to 2022, mainly because the most recent heart disease mortality data available was between January 1 to December 31, 2022. Additionally, the most recent GP demographic dataset for 2022 was from October, which is why the October 2022 prescription dataset was chosen for analysis.
 
 ```{r Loading Libraries}
 #Loading required libraries
@@ -31,67 +30,69 @@ library(gt)
 library(here)
 ```
 
-## Prescription Dataset
-Started by loading the 2022 oct prescription data. Then also filter out for antihypertensive drugs. then also connect HB and join by HB and connect the council area (this file also has council name). So going to analyze by if there is differences in perscription of antihypertensives and the outcome depending on the council area by joining with heart outcome.
+## Refining Prescription Data
+To start with, the 2022 October prescription dataset was loaded and cleansed. Given the large variety of antihypertensive drugs, the scope was narrowed down to just calcium channel blockers, including both the brand and generic names. Finally, dataset was refined to include only the columns of interest.
 
-First filtering for drug, there is too many different types of antihypertensive to cover everything. Thus, we're specifically going to look at brand name and drug name for Calcium channel blockers. Calcium channel blockers can reduce blood pressure by dilating the arteries and, in some cases, reducing the force of the heart's contractions. becausedata set seem to have both brand and drug name.
-
-```{r Prescription-dataset}
-
-#Loading 2022 October Prescription Dataset
+```{r}
+#Loading 2022 october prescription data
 prescriptions_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/oct2022per.csv") %>% 
   clean_names()
 
-#Filtering for calcium channel blockers 
+#Defining calcium channel blockers to filter in data
 calcium_channel_blockers <- c("Norvasc", "Amlodipine", "Diltiazem", "Cardizem", "Tiazac", "Plendil", "Felodipine", "DynaCirc", "Isradipine", "Cardene", "Nicardipine", "Sular", "Nisoldipine",  "Verelan", "Covera HS", "Isoptin SR", "Verapamil", "Procardia XL", "Adalat CC", "Nifedipine") %>% 
-  toupper() #to make all letters uppercase
+  toupper() #Convert all names to uppercase 
 
-paste(calcium_channel_blockers, collapse = "|")
-
+#Filtering the Prescription data
 filtered_prescriptions <- prescriptions_data %>% 
   filter(str_detect(bnf_item_description, paste(calcium_channel_blockers, collapse = "|"))) %>% 
-  filter(hbt != "SB0806") %>% #SB0806 indicate medication prescribed by Ambulance so filtered out cuz not related to CA
+  filter(hbt != "SB0806") %>% # Exclude ambulance prescriptions (hbt = SB0806)
   select(gp_practice, hbt, bnf_item_description, paid_quantity) #filtering only the columns we're interested in
 
 ```
 
-GP demographic data was then loaded and dealt with. As mentioned above to filter out the elder demographic filtered for people above 65. This was done by summing up population over 65 years old per GP (based on gp code) and then joining by gp code to the prescription dataset.
+## Merging GP Population Demographic Data
+The dataset with GP population demographic was then loaded and processed to identify the number of elderly population. This was achieved by summing the population over 65 years old for each GP practice. The resulting dataset was then joined with the filtered prescription dataset based on GP codes.
 
-```{r GP-demographic}
+```{r}
+#Loading GP demographic data
 gp_demographic_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv") %>% 
   clean_names()
 
-#filtering for age 65+ in GP demographic data then joining to perscription
-
+#Calculating number of elderly population per GP
 filtered_gp <- gp_demographic_data %>% 
   mutate(over_65 = ages65to74 + ages75to84 + ages85plus) %>%   
   select(practice_code, hb, hscp, over_65) %>%  
   group_by(practice_code) %>% 
   summarise(over_65_total = sum(over_65, na.rm = TRUE)) 
 
-#Joining GP_demographic data to prescription data
+#Joining GP demographic data to prescription data
 prescriptions_age <- filtered_prescriptions %>% 
   left_join(filtered_gp, by = join_by(gp_practice == practice_code)) 
 ```
 
-Then healthboard names were joined by 
+## Merging Healthboard and Council Area Data
+Then Health Board (HB) names dataset was loaded to add the corresponding HB names to the prescription dataset. The HB Codes were renamed and selected to match the prescription dataset, and two dataset were joined.
 ```{r}
-#loading healthboard name data
-Healthboards_name <- read_csv(here("/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv")) %>%
-  clean_names()
-#adding HB name to prescription set with age
-New_HB_name <- Healthboards_name %>% 
+#Loading Health Board name data
+healthboards_name <- read_csv(here("/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv")) %>%
+  clean_names() 
+
+#Preparing HB name data for joining
+filtered_hb_name <- healthboards_name %>% 
   rename(hbt = hb) %>% 
   select(hbt, hb_name)
 
-joined_data <- prescriptions_age %>% 
-  left_join(New_HB_name, join_by(hbt))
+#Joining HB names with prescription dataset by HB code
+prescriptions_age_hb <- prescriptions_age %>% 
+  left_join(filtered_hb_name, join_by(hbt))
 ```
 
-Then Council Area (CA) was joined. First loaded a dataset that
+Then, the council area (CA) information was added. the CA_HB dataset, which links council areas to health boards, was loaded and processed to ensure the correct mapping of council area names to their respective healthboards. the council area names were grouped and concatenated by their respective healthboard before being joined with the prescription dataset. This step was done because different council area share the same HB code therefore if join by HB code it will create many new data which was not present in the original dataset. So did it by grouping all councail area in the respective healthbaord.
+
 ```{r}
-CA_HB <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>% 
+CA_HB <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>%
   clean_names()
+
 #joining Council area by healthboard code
 
 CA_HB_2 <- CA_HB %>% 
@@ -99,7 +100,7 @@ CA_HB_2 <- CA_HB %>%
   group_by(hb_name) %>% 
   summarize(council_area = paste(unique(ca_name), collapse = ", "))
 
-prescriptions_age_ca <- joined_data %>% 
+prescriptions_age_hb_ca <- prescriptions_age_hb %>% 
   left_join(CA_HB_2, by = join_by(hb_name))
 ```
 
@@ -121,7 +122,7 @@ Heart2 <- heart_mortality %>%
 
 ```{r}
 #creating a column that has number of populatino for council area
-over65_summary <- prescriptions_age_ca %>% 
+over65_summary <- prescriptions_age_hb_ca %>% 
   select(council_area, gp_practice, over_65_total) %>% 
   distinct() %>%  
   group_by(council_area) %>% 
@@ -131,7 +132,7 @@ over65_summary <- prescriptions_age_ca %>%
  # left_join(over65_summary, by = "council_area")
 
 #fii
-joined_data_final <- prescriptions_age_ca %>% 
+joined_data_final <- prescriptions_age_hb_ca %>% 
   left_join(over65_summary, by = "council_area") %>%  
   left_join(Heart2, by = join_by(hbt == hbr)) %>% 
   group_by(council_area) %>% 
@@ -235,7 +236,7 @@ SIMD <- read_csv(here("/Users/Studnet Data/Year 4/data_science/B138584/data/SIMD
 
 #Filtering out SIMD and linking to CA
 SIMD_Filtered <- SIMD %>% 
-  left_join(New_HB_name, by = join_by(hb == hbt)) %>%
+  left_join(filtered_hb_name, by = join_by(hb == hbt)) %>%
   select(hb_name, simd2020v2ca_quintile) %>%
   group_by(hb_name) %>% 
   summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE))
