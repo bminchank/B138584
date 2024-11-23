@@ -90,61 +90,66 @@ prescriptions_age_hb <- prescriptions_age %>%
 Then, the council area (CA) information was added. the CA_HB dataset, which links council areas to health boards, was loaded and processed to ensure the correct mapping of council area names to their respective healthboards. the council area names were grouped and concatenated by their respective healthboard before being joined with the prescription dataset. This step was done because different council area share the same HB code therefore if join by HB code it will create many new data which was not present in the original dataset. So did it by grouping all councail area in the respective healthbaord.
 
 ```{r}
-CA_HB <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>%
+#Loading Council Area, Health Board data
+ca_hb <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>%
   clean_names()
 
-#joining Council area by healthboard code
-
-CA_HB_2 <- CA_HB %>% 
+#Refining CA data for joining
+filtered_ca_hb <- ca_hb %>% 
   select(hb_name, ca_name, ca) %>% 
   group_by(hb_name) %>% 
-  summarize(council_area = paste(unique(ca_name), collapse = ", "))
+  summarize(council_area = paste(unique(ca_name), collapse = ", ")) # Combine council area names for each 
 
+# Joining Council Area data with the prescription data
 prescriptions_age_hb_ca <- prescriptions_age_hb %>% 
-  left_join(CA_HB_2, by = join_by(hb_name))
+  left_join(filtered_ca_hb, by = join_by(hb_name))
 ```
 
-Lastly mortality rate from CVD was added
+## Merging CVD Mortality Outcome data
+Lastly,  mortality rate from CVD was added. Filtered out the death from 2022 and the cases of death in the age group 65+. Data was joined by health board regions, summing the total number of death for indivdiuals aged 65 and older in each health board council area regions. Some CA including Na h-Eileanan Siar, Orkney Islands, Shetland Islands reported 0 cases of cardiovasculra death so they were filtered out from the analysis as it probably is like an error or there was problem in data collection.
 ```{r}
-heart_mortality <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv") %>% 
+#Loading CVD outcome data
+heart_mortality_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv") %>% 
   clean_names()
-#joining heart disease outcome by hb code
 
-Heart2 <- heart_mortality %>% 
+#joining heart disease outcome by hb code
+filtered_heart_data <- heart_mortality_data %>% 
   select(year, hbr, number_of_deaths, age_group) %>% 
-  filter(grepl('75plus years|65-74 years', age_group)) %>% 
+  filter(age_group %in% c("75plus years", "65-74 years")) %>% #filtering for 
   filter(year == 2022) %>% 
   group_by(hbr) %>% 
-  summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE))
-  #filter(over_65_total_death > 0)
+  summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE)) 
+  
 ```
 
+Next, the population of individuals aged 65 and older was calculated for each council area. This was done by grouping the GP-level demographic data by council area and summing the over-65 population (over_65_total) for each council area. These population metrics were then joined with the prescription dataset and the mortality dataset, ensuring a comprehensive view of prescriptions, demographics, and heart disease outcomes. 
 
 ```{r}
-#creating a column that has number of populatino for council area
-over65_summary <- prescriptions_age_hb_ca %>% 
+#Creating a column that has number of population for merged council area
+total_over65_ca <- prescriptions_age_hb_ca %>% 
   select(council_area, gp_practice, over_65_total) %>% 
-  distinct() %>%  
+  distinct() %>% #remove duplicate
   group_by(council_area) %>% 
   summarise(over65_CA = sum(over_65_total, na.rm = TRUE))
 
-#prescriptions_age_ca_2 <- prescriptions_age_ca %>% 
- # left_join(over65_summary, by = "council_area")
-
-#fii
+#Final Joined Data
 joined_data_final <- prescriptions_age_hb_ca %>% 
-  left_join(over65_summary, by = "council_area") %>%  
-  left_join(Heart2, by = join_by(hbt == hbr)) %>% 
+  left_join(total_over65_ca, by = "council_area") %>%  #joining to add 65+ populatino for CA
+  left_join(filtered_heart_data, by = join_by(hbt == hbr)) %>%  #joining to add mortality rate
+  filter(over_65_total_death != 0) %>% #Removed Council Area with 0 CVD Death Reports
   group_by(council_area) %>% 
   summarise(
     paid_quantity = sum(paid_quantity, na.rm = TRUE),
-    over65_CA = first(over65_CA),
-    over65_total_death = first(over_65_total_death, na_rm = TRUE)
-  )
+    over65_CA = first(over65_CA), #only picks the first value instead of summing because each row is already a sum
+    over65_total_death = first(over_65_total_death, na_rm = TRUE)  
+  ) 
+  
+```
 
+##
 
+```{r}
 #making table
-
 joined_data_final %>% 
   mutate(prescriptions_per_death = round(paid_quantity / over65_total_death, 1)) %>%
   select(
@@ -178,52 +183,25 @@ joined_data_final %>%
 
 
 #scatter plot
-ggplot(joined_data_final, aes(x = over65_CA, y = paid_quantity)) +
-  geom_point(color = "blue", size = 3) +
-  geom_smooth(method = "lm", se = FALSE, color = "red") +
-  labs(title = "Relationship Between Over-65 Population and Prescriptions",
-       x = "Over-65 Population",
-       y = "Total Prescriptions") +
-  theme_minimal()
-
-
-ggplot(joined_data_final, aes(x = over65_CA, y = over65_total_death, size = paid_quantity)) +
-  geom_point(alpha = 0.6, color = "purple") +
-  labs(title = "Relationship Between Older Population, Deaths, and Prescriptions",
-       x = "Population Aged 65+",
-       y = "Cardiovascular Deaths",
-       size = "Prescriptions") +
-  theme_minimal()
-
-
-#scatter different by color
-
-
-ggplot(joined_data_final, aes(x = over65_CA, y = over65_total_death, size = paid_quantity, color = council_area)) +
-  geom_point(alpha = 0.6) +
+ggplot(joined_data_final, aes(x = over65_CA, y = over65_total_death, color = paid_quantity)) +
+  geom_point(alpha = 1, size = 4.5) +  # Scatter plot with size and color encoding
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed", alpha = 0.3, show.legend = FALSE) +  # Regression line
+  scale_color_gradient(low = "lightblue", high = "red") +  # Gradient for color
   labs(
     title = "Relationship Between Older Population, Deaths, and Prescriptions",
     x = "Population Aged 65+",
     y = "Cardiovascular Deaths",
     size = "Prescriptions",
-    color = "Council Area"
+    color = "Prescriptions"
   ) +
-  theme_minimal() +
-  theme(
-    legend.position = "bottom",
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 8)
-  )
+  theme_minimal()
+
+
 
 
 #Kable
 library(knitr)
 library(kableExtra)
-
-
-
-
-
 ```
 
 
@@ -242,9 +220,9 @@ SIMD_Filtered <- SIMD %>%
   summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE))
 
 SiMD_CA_relation <- SIMD_Filtered %>%   
-  left_join(CA_HB_2, by = join_by(hb_name)) 
+  left_join(filtered_ca_hb, by = join_by(hb_name)) 
 
-Joined_FINALL <- joined_data_final %>% 
+joined_data_final_CA <- joined_data_final %>% 
   left_join(SiMD_CA_relation, by = join_by(council_area)) 
 
 
@@ -259,17 +237,17 @@ Pearson analysis was used because it is good tu se for continuous variables [(Se
 ```{r}
 # Select numeric variables
 #Correlation test: Older population vs. Prescriptions
-cor_test_older <- cor.test(Joined_FINALL$over65_CA, joined_data_final$paid_quantity, method = "pearson")
+cor_test_older <- cor.test(joined_data_final_CA$over65_CA, joined_data_final_CA$paid_quantity, method = "pearson")
 cor_test_older
 
 # Correlation test: Deprivation vs. Prescriptions
-cor_test_deprivation <- cor.test(Joined_FINALL$mean_simd_rank, joined_data_final$paid_quantity, method = "pearson")
+cor_test_deprivation <- cor.test(joined_data_final_CA$mean_simd_rank, joined_data_final_CA$paid_quantity, method = "pearson")
 
 # Print the result
 print(cor_test_deprivation)
 
 # Correlation test: Deprivation vs. Cardiovascular Deaths
-cor_test_cvd <- cor.test(Joined_FINALL$mean_simd_rank, joined_data_final$over65_total_death, method = "pearson")
+cor_test_cvd <- cor.test(joined_data_final_CA$mean_simd_rank, joined_data_final_CA$over65_total_death, method = "pearson")
 
 # Print the result
 print(cor_test_cvd)
@@ -281,11 +259,15 @@ print(cor_test_cvd)
 
 ```
 
-Strong positive correlation between older population and antihypertensive prescription (r =0.98, p = 3.49e-11) and deprivation and prescription was moderate positive correlation suggesting less deprived areas might be associated with higher antihypertensive medication. However correlation was not statitically significant. (r=0.49, p = 0.07), 
+Strong positive correlation between older population and antihypertensive prescription (r =0.98, p = 3.49e-11) and 
+deprivation and prescription was moderate positive correlation suggesting less deprived areas might be associated with higher antihypertensive medication. However correlation was not statitically significant. (r=0.49, p = 0.07), 
 
-The results showed a moderate positive correlation (r = 0.567), indicating that less deprived areas (higher SIMD rank) are associated with higher cardiovascular death rates. The correlation was statistically significant (p = 0.034). Results were counter intuitive with common belief because deprived areas are generally associated with poorer health. could be due to difference in acess to health care reporting.
+The deprivation and cvd death showed no linear correlation (r = 0.002, p = 0.99) signifiyingThe correlation was statistically significant (p = 0.034). Results were counter intuitive with common belief because deprived areas are generally associated with poorer health. could be due to difference in acess to health care reporting.
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Conclusion
+
 
 ## References
 
