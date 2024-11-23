@@ -146,7 +146,7 @@ joined_data_final <- prescriptions_age_hb_ca %>%
   
 ```
 
-##
+##Plots
 
 ```{r}
 #making table
@@ -196,17 +196,31 @@ ggplot(joined_data_final, aes(x = over65_CA, y = over65_total_death, color = pai
   ) +
   theme_minimal()
 
+ggplot(joined_data_final, aes(x = over65_CA, y = paid_quantity, color = over65_total_death)) +
+  geom_point(alpha = 1, size = 4.5) +  # Scatter plot with size and color encoding
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed", alpha = 0.3, show.legend = FALSE) +  # Regression line
+  scale_color_gradient(low = "lightblue", high = "red") +  # Gradient for color
+  labs(
+    title = "Relationship Between Older Population, Deaths, and Prescriptions",
+    x = "Population Aged 65+",
+    y = "Anti-hypertensives Prescription",
+    color = "Cardiovascular Deaths"
+  ) +
+  theme_minimal()
 
-
-
-#Kable
-library(knitr)
-library(kableExtra)
 ```
 
+The plot clearly demonstrates a strong linear relationship between the elderly population and antihypertensive prescriptions, highlighting that regions with larger elderly populations tend to have higher prescription volumes. Cardiovascular deaths, represented by color intensity (with red indicating higher deaths), also appear to increase in regions with higher prescription volumes. This reflects the significant burden of cardiovascular disease (CVD) among the elderly. While the overall trend aligns with expectations, the observed deviations suggest potential disparities in healthcare access or effectiveness that warrant further investigation.
 
-#include stuff about at the end analysis about how CVD occurs more often in lower income more deprived areas and link it to SIMD data. just mention with references. and compare to see if trend makes sense or not to see if more prescription occurred in areas with higher SIMD 
+## Deprivation and Its Relationship with CVD
 
+The data also reveals a trend where regions with larger elderly populations tend to have higher cardiovascular deaths. To further explore additional factors influencing this relationship, deprivation was considered as a potential driver of disparities in CVD outcomes. Previous research has shown that individuals living in the most deprived communities are 30% more likely to have high blood pressure, one of the strongest risk factors for CVD. Additionally, CVD is known to occur more frequently in lower-income, more deprived areas.
+
+To investigate this, the Scottish Index of Multiple Deprivation (SIMD) data was incorporated. SIMD ranks regions in Scotland from most deprived (rank 1) to least deprived (higher ranks) based on factors such as access to services, crime, education, employment, health, housing, and income. This analysis aims to determine whether regions with higher deprivation scores exhibit trends in prescription volumes and CVD deaths, providing further insights into the intersection of deprivation, hypertension, and cardiovascular health outcomes.
+
+SIMD dataset was loaded and cleaned for analysis. Since the SIMD data includes quintile ranks for deprivation (with lower ranks indicating higher deprivation), the dataset was filtered and summarized by Health Board (HB) to calculate the average deprivation rank (mean_simd_rank) for each Health Board. This allowed for comparisons at the council area level.
+
+To achieve this, the SIMD data was joined with Health Board names to align it with the prescription and council area datasets. Subsequently, the council area dataset was linked to the summarized SIMD data, enabling the integration of deprivation scores with demographic and prescription trends. Finally, the complete dataset, containing council areas, prescriptions, cardiovascular deaths, and SIMD ranks, was constructed for further analysis.
 #I've made coucnil are that are under same healthbaord into one row, treating them as one region for the analysis. Thus
 ```{r}
 SIMD <- read_csv(here("/Users/Studnet Data/Year 4/data_science/B138584/data/SIMD.csv")) %>%
@@ -224,16 +238,14 @@ SiMD_CA_relation <- SIMD_Filtered %>%
 
 joined_data_final_CA <- joined_data_final %>% 
   left_join(SiMD_CA_relation, by = join_by(council_area)) 
-
-
 ```
-
-
 
 ## Correlation Analysis
 
-Pearson analysis was used because it is good tu se for continuous variables [(Sereno, 2021)](https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/). Correlation tests to see relatinoship.
 
+Some correlation analyses were performed to examine the relationships between the variables presented in this study. Pearson's correlation analysis was chosen as it is well-suited for continuous variables, providing a measure of the linear relationship between them [(Sereno, 2021)](https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/). These tests were used to assess the strength and direction of associations, such as between the elderly population and cardiovascular deaths, as well as between deprivation and antihypertensive prescriptions, offering valuable insights into potential trends and disparities.
+
+The first test assessed whether regions with larger older populations exhibited higher prescription volumes, while the second and third tests examined the impact of deprivation on prescription rates and cardiovascular mortality, respectively. These analyses provide valuable insights into the potential drivers of healthcare needs and health disparities across regions."
 ```{r}
 # Select numeric variables
 #Correlation test: Older population vs. Prescriptions
