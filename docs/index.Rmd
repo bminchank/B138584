@@ -4,7 +4,7 @@ author: "Brian Kim"
 date: "2024-11-01"
 output:
   html_document:
-    theme: cerulean
+    theme: yeti
     toc: true
     toc_float: true
   pdf_document: default
@@ -31,14 +31,11 @@ library(here)
 ```
 ## Data Preparation for Analysis
 
-#### Refining Prescription Data
+### Refining Prescription Data
 To start with, the 2022 October prescription dataset was loaded and cleansed. Given the large variety of antihypertensive drugs, the scope was narrowed down to just calcium channel blockers, including both the brand and generic names. Finally, dataset was refined to include only the columns of interest. The Health Board code SB0806 was removed filtered out because it represents drugs prescribed in ambulances.
 
 ```{r}
 #Loading 2022 october prescription data
-#prescriptions_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/oct2022per.csv") %>% 
-#  clean_names()
-
 prescriptions_data <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/bd7bc2cf-4de5-4711-bd5a-9e3b77305453/download/pitc202210.csv") %>% 
   clean_names()
 
@@ -60,8 +57,6 @@ The dataset with GP population demographic was then loaded and processed to iden
 
 ```{r}
 #Loading GP demographic data
-#gp_demographic_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv") %>% 
-#  clean_names()
 gp_demographic_data <- read_csv("https://www.opendata.nhs.scot/dataset/e3300e98-cdd2-4f4e-a24e-06ee14fcc66c/resource/2c7dcb55-c83a-44bd-9128-47d1d6f339ba/download/practice_listsizes_oct2022-open-data.csv") %>% 
   clean_names()
 
@@ -81,8 +76,6 @@ prescriptions_age <- filtered_prescriptions %>%
 Then Health Board (HB) names dataset was loaded to add the corresponding HB names to the prescription dataset. The HB Codes were renamed and selected to match the prescription dataset, and two dataset were joined.
 ```{r}
 #Loading Health Board name data
-#healthboards_name <- read_csv(here("/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv")) %>%
-#  clean_names() 
 healthboards_name <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
   clean_names()
 
@@ -99,8 +92,6 @@ prescriptions_age_hb <- prescriptions_age %>%
 Then, the council area (CA) information was added. the CA_HB dataset, which links council areas to health boards, was loaded and processed to ensure the correct mapping of council area names to their respective healthboards. The council area names were grouped and concatenated by their respective healthboard before being joined with the prescription dataset. This step was done because multiple council areas share the same HB code. Thus, joining data by HB code created many new observations (duplicates) that were not part of the original dataset. 
 ```{r}
 #Loading Council Area, Health Board data
-#ca_hb <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>%
-#  clean_names()
 ca_hb <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/967937c4-8d67-4f39-974f-fd58c4acfda5/download/ca11_ca19.csv") %>% 
   clean_names()
 
@@ -119,8 +110,6 @@ prescriptions_age_hb_ca <- prescriptions_age_hb %>%
 Lastly, data from the **Scottish Heart Disease Statistics** dataset, specifically the **Heart Disease Mortality by Health Board** section, was incorporated into the analysis. The dataset was filtered to include only deaths from 2022 and individuals aged 65 and older. Mortality figures were then aggregated by health board regions, summing the total number of deaths for individuals aged 65+ within each council area. Some council areas, including Na h-Eileanan Siar, Orkney Islands, and Shetland Islands, reported zero cardiovascular deaths. These regions were excluded from the analysis, as this likely reflects data collection issues or reporting errors rather than an accurate representation of mortality rates.
 ```{r}
 #Loading CVD outcome data
-#heart_mortality_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv") %>% 
-#  clean_names()
 heart_mortality_data <- read_csv("https://www.opendata.nhs.scot/dataset/0e17f3fc-9429-48aa-b1ba-2b7e55688253/resource/dc0512a8-eb49-43b9-84f1-17ef95365d57/download/hd_mortalitybyhbr.csv") %>% 
   clean_names()
 #joining heart disease outcome by hb code
