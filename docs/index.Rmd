@@ -3,7 +3,10 @@ title: Exploring the Impact of Aging Populations and Deprivation on Cardiovascul
 author: "Brian Kim"
 date: "2024-11-01"
 output:
-  html_document: default
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_float: true
   pdf_document: default
 ---
 
@@ -127,7 +130,6 @@ filtered_heart_data <- heart_mortality_data %>%
   filter(year == 2022) %>% 
   group_by(hbr) %>% 
   summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE)) #Summing for elder population mortality per HB
-  
 ```
 
 Next, the population of individuals aged 65 and older was calculated for each concatenated council area. This was done by grouping the GP-level demographic data by council area and summing the over-65 population (over_65_total) for each council area. These population metrics were then joined with the prescription dataset and the mortality dataset, ensuring a comprehensive view of prescriptions, demographics, and heart disease outcomes. 
