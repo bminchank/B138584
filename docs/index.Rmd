@@ -176,7 +176,7 @@ To further investigate factors influencing this relationship, deprivation was ex
 
 To investigate this, the **Scottish Index of Multiple Deprivation (SIMD)** data was used. SIMD ranks regions in Scotland from most deprived (rank 1) to least deprived (rank 5) based on factors such as access to services, crime, education, employment, health, housing, and income. This analysis aimed to determine whether regions with higher deprivation scores exhibit trends in prescription volumes and CVD deaths.
 
-SIMD dataset was loaded and cleaned for analysis. Since the SIMD data includes quintile ranks for deprivation, the dataset was filtered and summarized by Health Board (HB) to calculate the average deprivation rank (mean_simd_rank) for each Health Board. This allowed for comparisons at the council area level. To achieve this, the SIMD data was first joined with Health Board names to align it with the prescription and council area datasets. 
+SIMD dataset was loaded and cleaned for analysis. Since the SIMD data includes quintile ranks for deprivation, the dataset was filtered and summarized by Health Board (HB) to calculate the average deprivation rank (mean_simd_rank) for each Health Board. This allowed for comparisons at the council area level. The mean was rounded to 4 decimal digits because the differences were quite minimal. SIMD data was first joined with Health Board names to align it with the prescription and council area datasets. 
 ```{r}
 #Loading SIMD data
 SIMD <- read_csv("https://www.opendata.nhs.scot/dataset/78d41fa9-1a62-4f7b-9edb-3e8522a93378/resource/acade396-8430-4b34-895a-b3e757fa346e/download/simd2020v2_22062020.csv") %>%
@@ -187,7 +187,7 @@ SIMD_Filtered <- SIMD %>%
   left_join(filtered_hb_name, by = join_by(hb == hbt)) %>%
   select(hb_name, simd2020v2ca_quintile) %>%
   group_by(hb_name) %>% 
-  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE)) #Calculating mean SIMD score per council area
+  summarise(mean_simd_rank = round(mean(simd2020v2ca_quintile, na.rm = TRUE), 4)) #Calculating mean SIMD score per council area
 ```
 
 Next, the council area dataset was linked to the summarized SIMD data, joining deprivation scores with demographic and prescription trends. 
@@ -227,7 +227,7 @@ joined_data_final_CA %>%
     paid_quantity = "Total Prescriptions",
     over65_total_death = "Cardiovascular Deaths",
     prescriptions_per_death = "Prescriptions per Death",
-    mean_simd_rank = "Deprivation Score"
+    mean_simd_rank = "Mean Deprivation Score"
   ) %>%
   tab_style(
     style = cell_text(weight = "bold"), #Column labels Bold

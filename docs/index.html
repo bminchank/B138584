@@ -1744,9 +1744,10 @@ volumes and CVD deaths.</p>
 includes quintile ranks for deprivation, the dataset was filtered and
 summarized by Health Board (HB) to calculate the average deprivation
 rank (mean_simd_rank) for each Health Board. This allowed for
-comparisons at the council area level. To achieve this, the SIMD data
-was first joined with Health Board names to align it with the
-prescription and council area datasets.</p>
+comparisons at the council area level. The mean was rounded to 4 decimal
+digits because the differences were quite minimal. SIMD data was first
+joined with Health Board names to align it with the prescription and
+council area datasets.</p>
 <pre class="r"><code>#Loading SIMD data
 SIMD &lt;- read_csv(&quot;https://www.opendata.nhs.scot/dataset/78d41fa9-1a62-4f7b-9edb-3e8522a93378/resource/acade396-8430-4b34-895a-b3e757fa346e/download/simd2020v2_22062020.csv&quot;) %&gt;%
   clean_names()
@@ -1756,7 +1757,7 @@ SIMD_Filtered &lt;- SIMD %&gt;%
   left_join(filtered_hb_name, by = join_by(hb == hbt)) %&gt;%
   select(hb_name, simd2020v2ca_quintile) %&gt;%
   group_by(hb_name) %&gt;% 
-  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE)) #Calculating mean SIMD score per council area</code></pre>
+  summarise(mean_simd_rank = round(mean(simd2020v2ca_quintile, na.rm = TRUE), 4)) #Calculating mean SIMD score per council area</code></pre>
 <p>Next, the council area dataset was linked to the summarized SIMD
 data, joining deprivation scores with demographic and prescription
 trends.</p>
@@ -1795,7 +1796,7 @@ joined_data_final_CA %&gt;%
     paid_quantity = &quot;Total Prescriptions&quot;,
     over65_total_death = &quot;Cardiovascular Deaths&quot;,
     prescriptions_per_death = &quot;Prescriptions per Death&quot;,
-    mean_simd_rank = &quot;Deprivation Score&quot;
+    mean_simd_rank = &quot;Mean Deprivation Score&quot;
   ) %&gt;%
   tab_style(
     style = cell_text(weight = &quot;bold&quot;), #Column labels Bold
@@ -1804,20 +1805,20 @@ joined_data_final_CA %&gt;%
   tab_source_note( #Data Source
     source_note = &quot;Data source: Public Health Scotland Open Data.&quot; 
   )</code></pre>
-<div id="ssvbjrglbk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#ssvbjrglbk table {
+<div id="kxumakeqjh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#kxumakeqjh table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#ssvbjrglbk thead, #ssvbjrglbk tbody, #ssvbjrglbk tfoot, #ssvbjrglbk tr, #ssvbjrglbk td, #ssvbjrglbk th {
+#kxumakeqjh thead, #kxumakeqjh tbody, #kxumakeqjh tfoot, #kxumakeqjh tr, #kxumakeqjh td, #kxumakeqjh th {
 border-style: none;
 }
-#ssvbjrglbk p {
+#kxumakeqjh p {
 margin: 0;
 padding: 0;
 }
-#ssvbjrglbk .gt_table {
+#kxumakeqjh .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -1842,11 +1843,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_caption {
+#kxumakeqjh .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#ssvbjrglbk .gt_title {
+#kxumakeqjh .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -1857,7 +1858,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#ssvbjrglbk .gt_subtitle {
+#kxumakeqjh .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -1868,7 +1869,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#ssvbjrglbk .gt_heading {
+#kxumakeqjh .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -1879,12 +1880,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_bottom_border {
+#kxumakeqjh .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_col_headings {
+#kxumakeqjh .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -1898,7 +1899,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_col_heading {
+#kxumakeqjh .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1917,7 +1918,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#ssvbjrglbk .gt_column_spanner_outer {
+#kxumakeqjh .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1928,13 +1929,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#ssvbjrglbk .gt_column_spanner_outer:first-child {
+#kxumakeqjh .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#ssvbjrglbk .gt_column_spanner_outer:last-child {
+#kxumakeqjh .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#ssvbjrglbk .gt_column_spanner {
+#kxumakeqjh .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -1945,10 +1946,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#ssvbjrglbk .gt_spanner_row {
+#kxumakeqjh .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#ssvbjrglbk .gt_group_heading {
+#kxumakeqjh .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1973,7 +1974,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#ssvbjrglbk .gt_empty_group_heading {
+#kxumakeqjh .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -1987,13 +1988,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#ssvbjrglbk .gt_from_md > :first-child {
+#kxumakeqjh .gt_from_md > :first-child {
 margin-top: 0;
 }
-#ssvbjrglbk .gt_from_md > :last-child {
+#kxumakeqjh .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#ssvbjrglbk .gt_row {
+#kxumakeqjh .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2011,7 +2012,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#ssvbjrglbk .gt_stub {
+#kxumakeqjh .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2023,7 +2024,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ssvbjrglbk .gt_stub_row_group {
+#kxumakeqjh .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2036,13 +2037,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#ssvbjrglbk .gt_row_group_first td {
+#kxumakeqjh .gt_row_group_first td {
 border-top-width: 2px;
 }
-#ssvbjrglbk .gt_row_group_first th {
+#kxumakeqjh .gt_row_group_first th {
 border-top-width: 2px;
 }
-#ssvbjrglbk .gt_summary_row {
+#kxumakeqjh .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2051,14 +2052,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ssvbjrglbk .gt_first_summary_row {
+#kxumakeqjh .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_first_summary_row.thick {
+#kxumakeqjh .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#ssvbjrglbk .gt_last_summary_row {
+#kxumakeqjh .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2067,7 +2068,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_grand_summary_row {
+#kxumakeqjh .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2076,7 +2077,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ssvbjrglbk .gt_first_grand_summary_row {
+#kxumakeqjh .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2085,7 +2086,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_last_grand_summary_row_top {
+#kxumakeqjh .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2094,10 +2095,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_striped {
+#kxumakeqjh .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#ssvbjrglbk .gt_table_body {
+#kxumakeqjh .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -2105,7 +2106,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_footnotes {
+#kxumakeqjh .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2118,7 +2119,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_footnote {
+#kxumakeqjh .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -2126,7 +2127,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ssvbjrglbk .gt_sourcenotes {
+#kxumakeqjh .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2139,64 +2140,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#ssvbjrglbk .gt_sourcenote {
+#kxumakeqjh .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ssvbjrglbk .gt_left {
+#kxumakeqjh .gt_left {
 text-align: left;
 }
-#ssvbjrglbk .gt_center {
+#kxumakeqjh .gt_center {
 text-align: center;
 }
-#ssvbjrglbk .gt_right {
+#kxumakeqjh .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#ssvbjrglbk .gt_font_normal {
+#kxumakeqjh .gt_font_normal {
 font-weight: normal;
 }
-#ssvbjrglbk .gt_font_bold {
+#kxumakeqjh .gt_font_bold {
 font-weight: bold;
 }
-#ssvbjrglbk .gt_font_italic {
+#kxumakeqjh .gt_font_italic {
 font-style: italic;
 }
-#ssvbjrglbk .gt_super {
+#kxumakeqjh .gt_super {
 font-size: 65%;
 }
-#ssvbjrglbk .gt_footnote_marks {
+#kxumakeqjh .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#ssvbjrglbk .gt_asterisk {
+#kxumakeqjh .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#ssvbjrglbk .gt_indent_1 {
+#kxumakeqjh .gt_indent_1 {
 text-indent: 5px;
 }
-#ssvbjrglbk .gt_indent_2 {
+#kxumakeqjh .gt_indent_2 {
 text-indent: 10px;
 }
-#ssvbjrglbk .gt_indent_3 {
+#kxumakeqjh .gt_indent_3 {
 text-indent: 15px;
 }
-#ssvbjrglbk .gt_indent_4 {
+#kxumakeqjh .gt_indent_4 {
 text-indent: 20px;
 }
-#ssvbjrglbk .gt_indent_5 {
+#kxumakeqjh .gt_indent_5 {
 text-indent: 25px;
 }
-#ssvbjrglbk .katex-display {
+#kxumakeqjh .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#ssvbjrglbk div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#kxumakeqjh div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -2212,7 +2213,7 @@ height: 0px !important;
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" style="font-weight: bold;" scope="col" id="paid_quantity">Total Prescriptions</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" style="font-weight: bold;" scope="col" id="over65_total_death">Cardiovascular Deaths</th>
       <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" style="font-weight: bold;" scope="col" id="prescriptions_per_death">Prescriptions per Death</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" style="font-weight: bold;" scope="col" id="mean_simd_rank">Deprivation Score</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" style="font-weight: bold;" scope="col" id="mean_simd_rank">Mean Deprivation Score</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
@@ -2221,67 +2222,67 @@ height: 0px !important;
 <td headers="paid_quantity" class="gt_row gt_right">2,363,841</td>
 <td headers="over65_total_death" class="gt_row gt_right">3,744</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">631.4</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.969822</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9698</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">Moray, Aberdeen City, Aberdeenshire</td>
 <td headers="over65_CA" class="gt_row gt_right">232556</td>
 <td headers="paid_quantity" class="gt_row gt_right">1,174,958</td>
 <td headers="over65_total_death" class="gt_row gt_right">2,000</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">587.5</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.967957</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9680</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">East Lothian, Midlothian, City of Edinburgh, West Lothian</td>
 <td headers="over65_CA" class="gt_row gt_right">319908</td>
 <td headers="paid_quantity" class="gt_row gt_right">1,426,069</td>
 <td headers="over65_total_death" class="gt_row gt_right">2,460</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">579.7</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.992613</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9926</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">Perth and Kinross, Angus, Dundee City</td>
 <td headers="over65_CA" class="gt_row gt_right">187088</td>
 <td headers="paid_quantity" class="gt_row gt_right">817,960</td>
 <td headers="over65_total_death" class="gt_row gt_right">1,444</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">566.5</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.977316</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9773</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">South Lanarkshire, North Lanarkshire</td>
 <td headers="over65_CA" class="gt_row gt_right">256144</td>
 <td headers="paid_quantity" class="gt_row gt_right">1,240,121</td>
 <td headers="over65_total_death" class="gt_row gt_right">2,352</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">527.3</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.952164</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9522</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">Highland, Argyll and Bute</td>
 <td headers="over65_CA" class="gt_row gt_right">159070</td>
 <td headers="paid_quantity" class="gt_row gt_right">666,867</td>
 <td headers="over65_total_death" class="gt_row gt_right">1,298</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">513.8</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.933638</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9336</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">Fife</td>
 <td headers="over65_CA" class="gt_row gt_right">155308</td>
 <td headers="paid_quantity" class="gt_row gt_right">762,029</td>
 <td headers="over65_total_death" class="gt_row gt_right">1,516</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">502.7</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.979757</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9798</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">Clackmannanshire, Falkirk, Stirling</td>
 <td headers="over65_CA" class="gt_row gt_right">126798</td>
 <td headers="paid_quantity" class="gt_row gt_right">636,026</td>
 <td headers="over65_total_death" class="gt_row gt_right">1,270</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">500.8</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.936118</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9361</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">East Ayrshire, North Ayrshire, South Ayrshire</td>
 <td headers="over65_CA" class="gt_row gt_right">177408</td>
 <td headers="paid_quantity" class="gt_row gt_right">878,384</td>
 <td headers="over65_total_death" class="gt_row gt_right">1,770</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">496.3</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.996016</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9960</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">Scottish Borders</td>
 <td headers="over65_CA" class="gt_row gt_right">61972</td>
 <td headers="paid_quantity" class="gt_row gt_right">222,627</td>
 <td headers="over65_total_death" class="gt_row gt_right">470</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">473.7</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">2.958042</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">2.9580</td></tr>
     <tr><td headers="council_area" class="gt_row gt_left">Dumfries and Galloway</td>
 <td headers="over65_CA" class="gt_row gt_right">81448</td>
 <td headers="paid_quantity" class="gt_row gt_right">342,787</td>
 <td headers="over65_total_death" class="gt_row gt_right">762</td>
 <td headers="prescriptions_per_death" class="gt_row gt_right">449.9</td>
-<td headers="mean_simd_rank" class="gt_row gt_right">3.019900</td></tr>
+<td headers="mean_simd_rank" class="gt_row gt_right">3.0199</td></tr>
   </tbody>
   <tfoot class="gt_sourcenotes">
     <tr>
@@ -2341,13 +2342,13 @@ cor_test_deprivation</code></pre>
 ##  Pearson&#39;s product-moment correlation
 ## 
 ## data:  joined_data_final_CA$mean_simd_rank and joined_data_final_CA$paid_quantity
-## t = -0.010788, df = 9, p-value = 0.9916
+## t = -0.010279, df = 9, p-value = 0.992
 ## alternative hypothesis: true correlation is not equal to 0
 ## 95 percent confidence interval:
-##  -0.6021721  0.5975680
+##  -0.6020638  0.5976772
 ## sample estimates:
 ##          cor 
-## -0.003596057</code></pre>
+## -0.003426159</code></pre>
 <pre class="r"><code># Correlation test: Deprivation vs. Cardiovascular Deaths
 cor_test_cvd &lt;- cor.test(joined_data_final_CA$mean_simd_rank, joined_data_final_CA$over65_total_death, method = &quot;pearson&quot;)
 cor_test_cvd</code></pre>
@@ -2355,13 +2356,13 @@ cor_test_cvd</code></pre>
 ##  Pearson&#39;s product-moment correlation
 ## 
 ## data:  joined_data_final_CA$mean_simd_rank and joined_data_final_CA$over65_total_death
-## t = -0.0083069, df = 9, p-value = 0.9936
+## t = -0.007615, df = 9, p-value = 0.9941
 ## alternative hypothesis: true correlation is not equal to 0
 ## 95 percent confidence interval:
-##  -0.6016446  0.5980995
+##  -0.6014974  0.5982476
 ## sample estimates:
 ##          cor 
-## -0.002768965</code></pre>
+## -0.002538317</code></pre>
 <p>The analysis revealed a strong positive correlation between the
 elderly population and antihypertensive prescriptions (r = 0.98, p &lt;
 0.001), indicating that regions with larger elderly populations tend to
