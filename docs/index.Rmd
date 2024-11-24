@@ -75,7 +75,7 @@ prescriptions_age <- filtered_prescriptions %>%
 
 ### Merging Healthboard and Council Area Data
 
-Then Health Board (HB) names dataset was loaded to add the corresponding HB names to the prescription dataset. The HB Codes were renamed and selected to match the prescription dataset, and two dataset were joined.
+Then, Health Board (HB) names dataset was loaded to add the corresponding HB names to the prescription dataset. The HB Codes were renamed and selected to match the prescription dataset, and two dataset were joined.
 ```{r}
 #Loading Health Board name data
 healthboards_name <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
@@ -91,7 +91,7 @@ prescriptions_age_hb <- prescriptions_age %>%
   left_join(filtered_hb_name, join_by(hbt))
 ```
 
-Then, the council area (CA) information was added. the CA_HB dataset, which links council areas to health boards, was loaded and processed to ensure the correct mapping of council area names to their respective healthboards. The council area names were grouped and concatenated by their respective healthboard before being joined with the prescription dataset. This step was done because multiple council areas share the same HB code. Thus, joining data by HB code created many new observations (duplicates) that were not part of the original dataset. 
+Then, the council area (CA) information was added. The CA_HB dataset, which links council areas to health boards, was loaded and processed to ensure the correct mapping of council area names to their respective healthboards. The council area names were grouped and concatenated by their respective healthboard code before being joined with the prescription dataset. This step was done because multiple council areas share the same HB code. Thus, joining data by HB code created many new observations (duplicates) that were not part of the original dataset. 
 ```{r}
 #Loading Council Area, Health Board data
 ca_hb <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/967937c4-8d67-4f39-974f-fd58c4acfda5/download/ca11_ca19.csv") %>% 
@@ -176,7 +176,7 @@ To further investigate factors influencing this relationship, deprivation was ex
 
 To investigate this, the **Scottish Index of Multiple Deprivation (SIMD)** data was used. SIMD ranks regions in Scotland from most deprived (rank 1) to least deprived (rank 5) based on factors such as access to services, crime, education, employment, health, housing, and income. This analysis aimed to determine whether regions with higher deprivation scores exhibit trends in prescription volumes and CVD deaths.
 
-SIMD dataset was loaded and cleaned for analysis. Since the SIMD data includes quintile ranks for deprivation (with lower ranks indicating higher deprivation), the dataset was filtered and summarized by Health Board (HB) to calculate the average deprivation rank (mean_simd_rank) for each Health Board. This allowed for comparisons at the council area level. To achieve this, the SIMD data was first joined with Health Board names to align it with the prescription and council area datasets. 
+SIMD dataset was loaded and cleaned for analysis. Since the SIMD data includes quintile ranks for deprivation, the dataset was filtered and summarized by Health Board (HB) to calculate the average deprivation rank (mean_simd_rank) for each Health Board. This allowed for comparisons at the council area level. To achieve this, the SIMD data was first joined with Health Board names to align it with the prescription and council area datasets. 
 ```{r}
 #Loading SIMD data
 SIMD <- read_csv("https://www.opendata.nhs.scot/dataset/78d41fa9-1a62-4f7b-9edb-3e8522a93378/resource/acade396-8430-4b34-895a-b3e757fa346e/download/simd2020v2_22062020.csv") %>%
@@ -187,7 +187,7 @@ SIMD_Filtered <- SIMD %>%
   left_join(filtered_hb_name, by = join_by(hb == hbt)) %>%
   select(hb_name, simd2020v2ca_quintile) %>%
   group_by(hb_name) %>% 
-  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE)) 
+  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE)) #Calculating mean SIMD score per council area
 ```
 
 Next, the council area dataset was linked to the summarized SIMD data, joining deprivation scores with demographic and prescription trends. 
@@ -203,7 +203,7 @@ joined_data_final_CA <- joined_data_final %>%
 Using the updated dataset, a new column called prescriptions_per_death was created. This column was calculated by dividing the total number of prescriptions (paid_quantity) by the total number of cardiovascular deaths among the population aged 65 and older.
 
 ```{r}
-#making a table that shows
+#making a table
 joined_data_final_CA %>% 
   mutate(prescriptions_per_death = round(paid_quantity / over65_total_death, 1)) %>% 
   select(
@@ -219,7 +219,7 @@ joined_data_final_CA %>%
   tab_header(
     title = "Prescriptions per Cardiovascular Death by Council Area"
   ) %>%
-  fmt_number(columns = c(paid_quantity, over65_total_death), decimals = 0) %>% #rounding columns to no decimal
+  fmt_number(columns = c(paid_quantity, over65_total_death), decimals = 0) %>% 
   fmt_number(columns = prescriptions_per_death, decimals = 1) %>% #rounding to one decimal points
   cols_label( 
     council_area = "Council Area",
@@ -238,33 +238,30 @@ joined_data_final_CA %>%
   )
 ```
 
-Regions with higher prescriptions per death, such as East Renfrewshire and Moray, appear to have more effective management of hypertension, as indicated by fewer cardiovascular deaths relative to the volume of prescriptions. These areas also have moderate deprivation scores, suggesting that less deprived regions may benefit from better healthcare infrastructure or access. In contrast, areas like Dumfries and Galloway and Scottish Borders, which have lower prescriptions per death, tend to be more deprived, with higher deprivation scores reflecting greater socioeconomic challenges. This aligns with broader research showing that deprivation is linked to poorer health outcomes, including higher cardiovascular mortality [(Kimenai et al., 2022)](https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.122.060042) The findings suggest that more deprived areas may face systemic barriers, such as limited healthcare access or poor adherence to treatment, which could contribute to worse cardiovascular outcomes despite lower prescription volumes. Overall, this analysis highlights the potential role of deprivation in influencing both prescribing practices and cardiovascular health outcomes, underscoring the need for targeted healthcare interventions to address disparities in more deprived regions. Further exploration of variability within deprivation scores and additional factors such as healthcare access, patient adherence, and comorbidities could provide a more comprehensive understanding of these trends.
+Regions with higher prescriptions per death, such as East Renfrewshire and Moray, appear to have more effective management of hypertension, as indicated by fewer cardiovascular deaths relative to the volume of prescriptions. These areas also have moderate deprivation scores, suggesting that less deprived regions may benefit from better healthcare infrastructure or access. In contrast, areas like Dumfries and Galloway and Scottish Borders, which have lower prescriptions per death, tend to be more deprived, with higher deprivation scores reflecting greater socioeconomic challenges. This aligns with broader research showing that deprivation is linked to poorer health outcomes, including higher cardiovascular mortality [(Kimenai et al., 2022)](https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.122.060042). The findings suggest that more deprived areas may face systemic barriers, such as limited healthcare access or poor adherence to treatment, which could contribute to worse cardiovascular outcomes despite lower prescription volumes. Overall, these results show the potential role of deprivation in influencing both prescribing practices and cardiovascular health outcomes.
 
 ### Correlation Analysis
-Correlation analyses were conducted to explore the relationships between the variables in this study. Pearson's correlation analysis was chosen as it is well-suited for continuous variables, providing a measure of the linear relationship between them [(Sereno, 2021)](https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/). These tests examined whether regions with larger elderly populations had higher prescription volumes and assessed the impact of deprivation on both prescription rates and cardiovascular mortality. 
+Correlation analyses were conducted to explore the relationships between the variables in this study. Pearson's correlation analysis was chosen as it is well-suited for continuous variables, providing a measure of the linear relationship between them [(Sereno, 2021)](https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/). 
 
 The first test evaluated whether regions with larger elderly populations had higher prescription volumes, while the second and third tests examined how deprivation influenced prescription rates and cardiovascular mortality. 
 ```{r}
 #Correlation test: Older population vs. Prescriptions
 cor_test_age <- cor.test(joined_data_final_CA$over65_CA, joined_data_final_CA$paid_quantity, method = "pearson")
-
 cor_test_age
 
 # Correlation test: Deprivation vs. Prescriptions
 cor_test_deprivation <- cor.test(joined_data_final_CA$mean_simd_rank, joined_data_final_CA$paid_quantity, method = "pearson")
-
 cor_test_deprivation
 
 # Correlation test: Deprivation vs. Cardiovascular Deaths
 cor_test_cvd <- cor.test(joined_data_final_CA$mean_simd_rank, joined_data_final_CA$over65_total_death, method = "pearson")
-
 cor_test_cvd
 ```
 
-The analysis revealed a strong positive correlation between the elderly population and antihypertensive prescriptions (r = 0.98, p < 0.001), indicating that regions with larger elderly populations tend to have significantly higher prescription volumes. However, the relationship between deprivation and prescriptions showed no meaningful linear correlation (r = -0.004, p = 0.992), suggesting that deprivation levels alone do not predict antihypertensive prescription rates. Similarly, the correlation between deprivation and cardiovascular deaths was negligible (r = -0.003, p = 0.994), indicating no clear association. These findings are counterintuitive, as deprived areas are typically associated with poorer health outcomes and higher cardiovascular mortality. This lack of significant correlation may reflect differences in healthcare access or regional reporting practices, which could underestimate the expected relationships.
+The analysis revealed a strong positive correlation between the elderly population and antihypertensive prescriptions (r = 0.98, p < 0.001), indicating that regions with larger elderly populations tend to have significantly higher prescription volumes. However, the relationship between deprivation and prescriptions showed no meaningful linear correlation (r = -0.004, p = 0.992), suggesting that deprivation levels alone do not predict antihypertensive prescription rates. Similarly, the correlation between deprivation and cardiovascular deaths was negligible (r = -0.003, p = 0.994). These findings are counterintuitive, as deprived areas are typically associated with poorer health outcomes and higher cardiovascular mortality. This lack of significant correlation maybe due to small data sample size or  differences in regional reporting practices, which could underestimate the expected relationships.
 
 ## Conclusion
-This report explored the relationships between antihypertensive prescriptions, elderly populations, deprivation, and cardiovascular health across council areas in Scotland. The findings showed a strong link between larger elderly populations and higher prescription volumes, reflecting the growing healthcare needs of aging communities. However, deprivation did not show a clear connection to either prescription rates or cardiovascular deaths, which may reflect the equalizing role of Scotland's healthcare system. The analysis was limited to one year and a single month of data, and the deprivation measure (SIMD) combines multiple factors, which may obscure specific influences. Future research could explore these trends over time, consider additional factors like medication adherence, and investigate how deprivation interacts with aging to affect health outcomes. This report highlights the importance of addressing the needs of older populations while continuing to explore broader social determinants of health.
+This report explored the relationships between antihypertensive prescriptions, elderly populations, deprivation, and cardiovascular health across council areas in Scotland. The findings showed a strong link between larger elderly populations and higher prescription volumes, reflecting the growing healthcare needs of aging communities. However, deprivation did not show a clear connection to either prescription rates or cardiovascular deaths. The analysis was limited to one year and a single month of data, and the deprivation measure combines multiple factors, which may obscure specific influences. Future research could explore these trends over time, consider additional factors like medication adherence, and investigate how deprivation interacts with aging to affect health outcomes. This report highlights the importance of addressing the needs of older populations while continuing to explore broader social determinants of health.
 
 ## References
 British Heart Foundation (2018). The CVD Challenge in Scotland. [online] British Heart Foundation. Available at: https://www.bhf.org.uk/for-professionals/healthcare-professionals/data-and-statistics/the-cvd-challenge/the-cvd-challenge-in-scotland.

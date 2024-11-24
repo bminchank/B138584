@@ -1607,7 +1607,7 @@ prescriptions_age &lt;- filtered_prescriptions %&gt;%
 </div>
 <div id="merging-healthboard-and-council-area-data" class="section level3">
 <h3>Merging Healthboard and Council Area Data</h3>
-<p>Then Health Board (HB) names dataset was loaded to add the
+<p>Then, Health Board (HB) names dataset was loaded to add the
 corresponding HB names to the prescription dataset. The HB Codes were
 renamed and selected to match the prescription dataset, and two dataset
 were joined.</p>
@@ -1623,13 +1623,13 @@ filtered_hb_name &lt;- healthboards_name %&gt;%
 #Joining HB names with prescription dataset by HB code
 prescriptions_age_hb &lt;- prescriptions_age %&gt;% 
   left_join(filtered_hb_name, join_by(hbt))</code></pre>
-<p>Then, the council area (CA) information was added. the CA_HB dataset,
+<p>Then, the council area (CA) information was added. The CA_HB dataset,
 which links council areas to health boards, was loaded and processed to
 ensure the correct mapping of council area names to their respective
 healthboards. The council area names were grouped and concatenated by
-their respective healthboard before being joined with the prescription
-dataset. This step was done because multiple council areas share the
-same HB code. Thus, joining data by HB code created many new
+their respective healthboard code before being joined with the
+prescription dataset. This step was done because multiple council areas
+share the same HB code. Thus, joining data by HB code created many new
 observations (duplicates) that were not part of the original
 dataset.</p>
 <pre class="r"><code>#Loading Council Area, Health Board data
@@ -1741,12 +1741,12 @@ health, housing, and income. This analysis aimed to determine whether
 regions with higher deprivation scores exhibit trends in prescription
 volumes and CVD deaths.</p>
 <p>SIMD dataset was loaded and cleaned for analysis. Since the SIMD data
-includes quintile ranks for deprivation (with lower ranks indicating
-higher deprivation), the dataset was filtered and summarized by Health
-Board (HB) to calculate the average deprivation rank (mean_simd_rank)
-for each Health Board. This allowed for comparisons at the council area
-level. To achieve this, the SIMD data was first joined with Health Board
-names to align it with the prescription and council area datasets.</p>
+includes quintile ranks for deprivation, the dataset was filtered and
+summarized by Health Board (HB) to calculate the average deprivation
+rank (mean_simd_rank) for each Health Board. This allowed for
+comparisons at the council area level. To achieve this, the SIMD data
+was first joined with Health Board names to align it with the
+prescription and council area datasets.</p>
 <pre class="r"><code>#Loading SIMD data
 SIMD &lt;- read_csv(&quot;https://www.opendata.nhs.scot/dataset/78d41fa9-1a62-4f7b-9edb-3e8522a93378/resource/acade396-8430-4b34-895a-b3e757fa346e/download/simd2020v2_22062020.csv&quot;) %&gt;%
   clean_names()
@@ -1756,7 +1756,7 @@ SIMD_Filtered &lt;- SIMD %&gt;%
   left_join(filtered_hb_name, by = join_by(hb == hbt)) %&gt;%
   select(hb_name, simd2020v2ca_quintile) %&gt;%
   group_by(hb_name) %&gt;% 
-  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE)) </code></pre>
+  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE)) #Calculating mean SIMD score per council area</code></pre>
 <p>Next, the council area dataset was linked to the summarized SIMD
 data, joining deprivation scores with demographic and prescription
 trends.</p>
@@ -1771,7 +1771,7 @@ prescriptions_per_death was created. This column was calculated by
 dividing the total number of prescriptions (paid_quantity) by the total
 number of cardiovascular deaths among the population aged 65 and
 older.</p>
-<pre class="r"><code>#making a table that shows
+<pre class="r"><code>#making a table
 joined_data_final_CA %&gt;% 
   mutate(prescriptions_per_death = round(paid_quantity / over65_total_death, 1)) %&gt;% 
   select(
@@ -1787,7 +1787,7 @@ joined_data_final_CA %&gt;%
   tab_header(
     title = &quot;Prescriptions per Cardiovascular Death by Council Area&quot;
   ) %&gt;%
-  fmt_number(columns = c(paid_quantity, over65_total_death), decimals = 0) %&gt;% #rounding columns to no decimal
+  fmt_number(columns = c(paid_quantity, over65_total_death), decimals = 0) %&gt;% 
   fmt_number(columns = prescriptions_per_death, decimals = 1) %&gt;% #rounding to one decimal points
   cols_label( 
     council_area = &quot;Council Area&quot;,
@@ -1804,20 +1804,20 @@ joined_data_final_CA %&gt;%
   tab_source_note( #Data Source
     source_note = &quot;Data source: Public Health Scotland Open Data.&quot; 
   )</code></pre>
-<div id="fsdwfbwolb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#fsdwfbwolb table {
+<div id="irtyekooqh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#irtyekooqh table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#fsdwfbwolb thead, #fsdwfbwolb tbody, #fsdwfbwolb tfoot, #fsdwfbwolb tr, #fsdwfbwolb td, #fsdwfbwolb th {
+#irtyekooqh thead, #irtyekooqh tbody, #irtyekooqh tfoot, #irtyekooqh tr, #irtyekooqh td, #irtyekooqh th {
 border-style: none;
 }
-#fsdwfbwolb p {
+#irtyekooqh p {
 margin: 0;
 padding: 0;
 }
-#fsdwfbwolb .gt_table {
+#irtyekooqh .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -1842,11 +1842,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_caption {
+#irtyekooqh .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#fsdwfbwolb .gt_title {
+#irtyekooqh .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -1857,7 +1857,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#fsdwfbwolb .gt_subtitle {
+#irtyekooqh .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -1868,7 +1868,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#fsdwfbwolb .gt_heading {
+#irtyekooqh .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -1879,12 +1879,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_bottom_border {
+#irtyekooqh .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_col_headings {
+#irtyekooqh .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -1898,7 +1898,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_col_heading {
+#irtyekooqh .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1917,7 +1917,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#fsdwfbwolb .gt_column_spanner_outer {
+#irtyekooqh .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -1928,13 +1928,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#fsdwfbwolb .gt_column_spanner_outer:first-child {
+#irtyekooqh .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#fsdwfbwolb .gt_column_spanner_outer:last-child {
+#irtyekooqh .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#fsdwfbwolb .gt_column_spanner {
+#irtyekooqh .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -1945,10 +1945,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#fsdwfbwolb .gt_spanner_row {
+#irtyekooqh .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#fsdwfbwolb .gt_group_heading {
+#irtyekooqh .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -1973,7 +1973,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#fsdwfbwolb .gt_empty_group_heading {
+#irtyekooqh .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -1987,13 +1987,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#fsdwfbwolb .gt_from_md > :first-child {
+#irtyekooqh .gt_from_md > :first-child {
 margin-top: 0;
 }
-#fsdwfbwolb .gt_from_md > :last-child {
+#irtyekooqh .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#fsdwfbwolb .gt_row {
+#irtyekooqh .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2011,7 +2011,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#fsdwfbwolb .gt_stub {
+#irtyekooqh .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2023,7 +2023,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fsdwfbwolb .gt_stub_row_group {
+#irtyekooqh .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2036,13 +2036,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#fsdwfbwolb .gt_row_group_first td {
+#irtyekooqh .gt_row_group_first td {
 border-top-width: 2px;
 }
-#fsdwfbwolb .gt_row_group_first th {
+#irtyekooqh .gt_row_group_first th {
 border-top-width: 2px;
 }
-#fsdwfbwolb .gt_summary_row {
+#irtyekooqh .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2051,14 +2051,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fsdwfbwolb .gt_first_summary_row {
+#irtyekooqh .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_first_summary_row.thick {
+#irtyekooqh .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#fsdwfbwolb .gt_last_summary_row {
+#irtyekooqh .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2067,7 +2067,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_grand_summary_row {
+#irtyekooqh .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2076,7 +2076,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fsdwfbwolb .gt_first_grand_summary_row {
+#irtyekooqh .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2085,7 +2085,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_last_grand_summary_row_top {
+#irtyekooqh .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2094,10 +2094,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_striped {
+#irtyekooqh .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#fsdwfbwolb .gt_table_body {
+#irtyekooqh .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -2105,7 +2105,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_footnotes {
+#irtyekooqh .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2118,7 +2118,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_footnote {
+#irtyekooqh .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -2126,7 +2126,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fsdwfbwolb .gt_sourcenotes {
+#irtyekooqh .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2139,64 +2139,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#fsdwfbwolb .gt_sourcenote {
+#irtyekooqh .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#fsdwfbwolb .gt_left {
+#irtyekooqh .gt_left {
 text-align: left;
 }
-#fsdwfbwolb .gt_center {
+#irtyekooqh .gt_center {
 text-align: center;
 }
-#fsdwfbwolb .gt_right {
+#irtyekooqh .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#fsdwfbwolb .gt_font_normal {
+#irtyekooqh .gt_font_normal {
 font-weight: normal;
 }
-#fsdwfbwolb .gt_font_bold {
+#irtyekooqh .gt_font_bold {
 font-weight: bold;
 }
-#fsdwfbwolb .gt_font_italic {
+#irtyekooqh .gt_font_italic {
 font-style: italic;
 }
-#fsdwfbwolb .gt_super {
+#irtyekooqh .gt_super {
 font-size: 65%;
 }
-#fsdwfbwolb .gt_footnote_marks {
+#irtyekooqh .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#fsdwfbwolb .gt_asterisk {
+#irtyekooqh .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#fsdwfbwolb .gt_indent_1 {
+#irtyekooqh .gt_indent_1 {
 text-indent: 5px;
 }
-#fsdwfbwolb .gt_indent_2 {
+#irtyekooqh .gt_indent_2 {
 text-indent: 10px;
 }
-#fsdwfbwolb .gt_indent_3 {
+#irtyekooqh .gt_indent_3 {
 text-indent: 15px;
 }
-#fsdwfbwolb .gt_indent_4 {
+#irtyekooqh .gt_indent_4 {
 text-indent: 20px;
 }
-#fsdwfbwolb .gt_indent_5 {
+#irtyekooqh .gt_indent_5 {
 text-indent: 25px;
 }
-#fsdwfbwolb .katex-display {
+#irtyekooqh .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#fsdwfbwolb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#irtyekooqh div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -2302,17 +2302,12 @@ death, tend to be more deprived, with higher deprivation scores
 reflecting greater socioeconomic challenges. This aligns with broader
 research showing that deprivation is linked to poorer health outcomes,
 including higher cardiovascular mortality <a href="https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.122.060042">(Kimenai
-et al., 2022)</a> The findings suggest that more deprived areas may face
-systemic barriers, such as limited healthcare access or poor adherence
-to treatment, which could contribute to worse cardiovascular outcomes
-despite lower prescription volumes. Overall, this analysis highlights
+et al., 2022)</a>. The findings suggest that more deprived areas may
+face systemic barriers, such as limited healthcare access or poor
+adherence to treatment, which could contribute to worse cardiovascular
+outcomes despite lower prescription volumes. Overall, these results show
 the potential role of deprivation in influencing both prescribing
-practices and cardiovascular health outcomes, underscoring the need for
-targeted healthcare interventions to address disparities in more
-deprived regions. Further exploration of variability within deprivation
-scores and additional factors such as healthcare access, patient
-adherence, and comorbidities could provide a more comprehensive
-understanding of these trends.</p>
+practices and cardiovascular health outcomes.</p>
 </div>
 <div id="correlation-analysis" class="section level3">
 <h3>Correlation Analysis</h3>
@@ -2320,16 +2315,13 @@ understanding of these trends.</p>
 between the variables in this study. Pearson’s correlation analysis was
 chosen as it is well-suited for continuous variables, providing a
 measure of the linear relationship between them <a href="https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/">(Sereno,
-2021)</a>. These tests examined whether regions with larger elderly
-populations had higher prescription volumes and assessed the impact of
-deprivation on both prescription rates and cardiovascular mortality.</p>
+2021)</a>.</p>
 <p>The first test evaluated whether regions with larger elderly
 populations had higher prescription volumes, while the second and third
 tests examined how deprivation influenced prescription rates and
 cardiovascular mortality.</p>
 <pre class="r"><code>#Correlation test: Older population vs. Prescriptions
 cor_test_age &lt;- cor.test(joined_data_final_CA$over65_CA, joined_data_final_CA$paid_quantity, method = &quot;pearson&quot;)
-
 cor_test_age</code></pre>
 <pre><code>## 
 ##  Pearson&#39;s product-moment correlation
@@ -2344,7 +2336,6 @@ cor_test_age</code></pre>
 ## 0.9856953</code></pre>
 <pre class="r"><code># Correlation test: Deprivation vs. Prescriptions
 cor_test_deprivation &lt;- cor.test(joined_data_final_CA$mean_simd_rank, joined_data_final_CA$paid_quantity, method = &quot;pearson&quot;)
-
 cor_test_deprivation</code></pre>
 <pre><code>## 
 ##  Pearson&#39;s product-moment correlation
@@ -2359,7 +2350,6 @@ cor_test_deprivation</code></pre>
 ## -0.003596057</code></pre>
 <pre class="r"><code># Correlation test: Deprivation vs. Cardiovascular Deaths
 cor_test_cvd &lt;- cor.test(joined_data_final_CA$mean_simd_rank, joined_data_final_CA$over65_total_death, method = &quot;pearson&quot;)
-
 cor_test_cvd</code></pre>
 <pre><code>## 
 ##  Pearson&#39;s product-moment correlation
@@ -2380,12 +2370,12 @@ relationship between deprivation and prescriptions showed no meaningful
 linear correlation (r = -0.004, p = 0.992), suggesting that deprivation
 levels alone do not predict antihypertensive prescription rates.
 Similarly, the correlation between deprivation and cardiovascular deaths
-was negligible (r = -0.003, p = 0.994), indicating no clear association.
-These findings are counterintuitive, as deprived areas are typically
-associated with poorer health outcomes and higher cardiovascular
-mortality. This lack of significant correlation may reflect differences
-in healthcare access or regional reporting practices, which could
-underestimate the expected relationships.</p>
+was negligible (r = -0.003, p = 0.994). These findings are
+counterintuitive, as deprived areas are typically associated with poorer
+health outcomes and higher cardiovascular mortality. This lack of
+significant correlation maybe due to small data sample size or
+differences in regional reporting practices, which could underestimate
+the expected relationships.</p>
 </div>
 </div>
 <div id="conclusion" class="section level2">
@@ -2396,11 +2386,10 @@ health across council areas in Scotland. The findings showed a strong
 link between larger elderly populations and higher prescription volumes,
 reflecting the growing healthcare needs of aging communities. However,
 deprivation did not show a clear connection to either prescription rates
-or cardiovascular deaths, which may reflect the equalizing role of
-Scotland’s healthcare system. The analysis was limited to one year and a
-single month of data, and the deprivation measure (SIMD) combines
-multiple factors, which may obscure specific influences. Future research
-could explore these trends over time, consider additional factors like
+or cardiovascular deaths. The analysis was limited to one year and a
+single month of data, and the deprivation measure combines multiple
+factors, which may obscure specific influences. Future research could
+explore these trends over time, consider additional factors like
 medication adherence, and investigate how deprivation interacts with
 aging to affect health outcomes. This report highlights the importance
 of addressing the needs of older populations while continuing to explore
