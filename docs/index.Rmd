@@ -1,5 +1,5 @@
 ---
-title: Exploring the Relationship Between Deprivation, Cardiovascular Health, and Antihypertensive Prescriptions in Scotland
+title: Exploring the Impact of Aging Populations and Deprivation on Cardiovascular Health and Antihypertensive Prescriptions in Scotland
 author: "Brian Kim"
 date: "2024-11-01"
 output:
@@ -12,15 +12,12 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warnings=FALSE)
 ```
 
 ## Introduction
+Cardiovascular disesase (CVD) refers to group of conditions affecting the heart and blood vessels. CVD is the leading cause of death both globally and in Scotland [(British Heart Foundation, 2018)](https://www.bhf.org.uk/for-professionals/healthcare-professionals/data-and-statistics/the-cvd-challenge/the-cvd-challenge-in-scotland), emphasizing the need to better understand their risk factors and treatment trends. The causes of CVD are multifactorial. Among these, hypertension (high blood pressure) is commonly recognized as one of the strongest and most prevalent risk factor for CVD, with substantial evidence supporting its causal relationship [(Fuchs and Whelton, 2020)](https://pubmed.ncbi.nlm.nih.gov/31865786/).
 
-Cardiovascular disesase (CVD) refers to group of conditions affecting the heart and blood vessels. CVD is the leading cause of death both globally and in Scotland [(British Heart Foundation, 2018)](https://www.bhf.org.uk/for-professionals/healthcare-professionals/data-and-statistics/the-cvd-challenge/the-cvd-challenge-in-scotland), emphasizing the need to better understand their risk factors and treatment trends. The causes of CVD are multifactorial, with various risk factors contributing to its development. Among these, hypertension (high blood pressure) is commonly recognized as one of the strongest and most prevalent risk factor for CVD, with strong evidence supporting its causal relationship [(Fuchs and Whelton, 2020)](https://pubmed.ncbi.nlm.nih.gov/31865786/).
-
-To address this growing risk, this project aimed to explore whether there is a trend in antihypertensvie medication prescribing acrouss council ares in Scotland. Specifically, the study aimed to examine the relationship between prescribing patterns and key demogrpahic factors that influence this such as age and deprivation levels. Data was analyzed on the level of council area  in Scotland. Speficially my project focused on examining whehter trend exist in anitherpyensive medication prescring areas with higher proportion of adults or areas with higher "deprivation score" according to the 2020 Scottish Index of Multiple Deprivation (SIMD), were associated with increasing prescribing of antihypertensvie medications.
-
-For this report, "elderly" population refers to individuals aged 65 and older in alignment with common health guidelines. All datasets  used in this project and their respective data dictionaries were sourced from Public Health Scotland Open Data, which can be accessed here:
+This project aimed to explore trends in antihypertensive prescriptions across Scottish council areas, focusing on the relationship between prescribing patterns, age demographics, and deprivation levels. Specifically, it examined whether areas with larger elderly populations or higher deprivation scores, based on the 2020 Scottish Index of Multiple Deprivation (SIMD), were associated with increased antihypertensive prescription. For this report, "elderly population" refers to individuals aged 65 and older in accordance with common health guidelines. All datasets  used in this project and their respective data dictionaries were taken from Public Health Scotland Open Data, which can be accessed here:
 https://www.opendata.nhs.scot/
 
-The time scope of this report is limited to 2022, mainly because the most recent heart disease mortality data available was between January 1 to December 31, 2022. Additionally, the most recent GP demographic dataset for 2022 was from October, which is why the October 2022 prescription dataset was chosen for analysis.
+The time scope this report covered was limited to 2022, mainly because the most recent heart disease mortality data available was between January 1 to December 31, 2022. Additionally, the most recent GP demographic dataset for 2022 was from October, which is why the October 2022 prescription dataset was chosen for analysis. 
 
 ```{r Loading Libraries}
 #Loading required libraries
@@ -29,14 +26,19 @@ library(janitor)
 library(gt)
 library(here)
 ```
+## Data Preparation for Analysis
 
-## Refining Prescription Data
-To start with, the 2022 October prescription dataset was loaded and cleansed. Given the large variety of antihypertensive drugs, the scope was narrowed down to just calcium channel blockers, including both the brand and generic names. Finally, dataset was refined to include only the columns of interest.
+#### Refining Prescription Data
+To start with, the 2022 October prescription dataset was loaded and cleansed. Given the large variety of antihypertensive drugs, the scope was narrowed down to just calcium channel blockers, including both the brand and generic names. Finally, dataset was refined to include only the columns of interest. The Health Board code SB0806 was removed filtered out because it represents drugs prescribed in ambulances.
 
 ```{r}
 #Loading 2022 october prescription data
-prescriptions_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/oct2022per.csv") %>% 
+#prescriptions_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/oct2022per.csv") %>% 
+#  clean_names()
+
+prescriptions_data <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/bd7bc2cf-4de5-4711-bd5a-9e3b77305453/download/pitc202210.csv") %>% 
   clean_names()
+
 
 #Defining calcium channel blockers to filter in data
 calcium_channel_blockers <- c("Norvasc", "Amlodipine", "Diltiazem", "Cardizem", "Tiazac", "Plendil", "Felodipine", "DynaCirc", "Isradipine", "Cardene", "Nicardipine", "Sular", "Nisoldipine",  "Verelan", "Covera HS", "Isoptin SR", "Verapamil", "Procardia XL", "Adalat CC", "Nifedipine") %>% 
@@ -50,12 +52,14 @@ filtered_prescriptions <- prescriptions_data %>%
 
 ```
 
-## Merging GP Population Demographic Data
+#### Merging GP Population Demographic Data
 The dataset with GP population demographic was then loaded and processed to identify the number of elderly population. This was achieved by summing the population over 65 years old for each GP practice. The resulting dataset was then joined with the filtered prescription dataset based on GP codes.
 
 ```{r}
 #Loading GP demographic data
-gp_demographic_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv") %>% 
+#gp_demographic_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/GPDemographic2022oct.csv") %>% 
+#  clean_names()
+gp_demographic_data <- read_csv("https://www.opendata.nhs.scot/dataset/e3300e98-cdd2-4f4e-a24e-06ee14fcc66c/resource/2c7dcb55-c83a-44bd-9128-47d1d6f339ba/download/practice_listsizes_oct2022-open-data.csv") %>% 
   clean_names()
 
 #Calculating number of elderly population per GP
@@ -63,19 +67,21 @@ filtered_gp <- gp_demographic_data %>%
   mutate(over_65 = ages65to74 + ages75to84 + ages85plus) %>%   
   select(practice_code, hb, hscp, over_65) %>%  
   group_by(practice_code) %>% 
-  summarise(over_65_total = sum(over_65, na.rm = TRUE)) 
+  summarise(over_65_total = sum(over_65, na.rm = TRUE))  #Summing the total elderly population per gp practice
 
 #Joining GP demographic data to prescription data
 prescriptions_age <- filtered_prescriptions %>% 
   left_join(filtered_gp, by = join_by(gp_practice == practice_code)) 
 ```
 
-## Merging Healthboard and Council Area Data
+#### Merging Healthboard and Council Area Data
 Then Health Board (HB) names dataset was loaded to add the corresponding HB names to the prescription dataset. The HB Codes were renamed and selected to match the prescription dataset, and two dataset were joined.
 ```{r}
 #Loading Health Board name data
-healthboards_name <- read_csv(here("/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv")) %>%
-  clean_names() 
+#healthboards_name <- read_csv(here("/Users/Studnet Data/Year 4/data_science/week_7_thurs/Healthboard.csv")) %>%
+#  clean_names() 
+healthboards_name <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
+  clean_names()
 
 #Preparing HB name data for joining
 filtered_hb_name <- healthboards_name %>% 
@@ -87,42 +93,44 @@ prescriptions_age_hb <- prescriptions_age %>%
   left_join(filtered_hb_name, join_by(hbt))
 ```
 
-Then, the council area (CA) information was added. the CA_HB dataset, which links council areas to health boards, was loaded and processed to ensure the correct mapping of council area names to their respective healthboards. the council area names were grouped and concatenated by their respective healthboard before being joined with the prescription dataset. This step was done because different council area share the same HB code therefore if join by HB code it will create many new data which was not present in the original dataset. So did it by grouping all councail area in the respective healthbaord.
-
+Then, the council area (CA) information was added. the CA_HB dataset, which links council areas to health boards, was loaded and processed to ensure the correct mapping of council area names to their respective healthboards. The council area names were grouped and concatenated by their respective healthboard before being joined with the prescription dataset. This step was done because multiple council areas share the same HB code. Thus, joining data by HB code created many new observations (duplicates) that were not part of the original dataset. 
 ```{r}
 #Loading Council Area, Health Board data
-ca_hb <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>%
+#ca_hb <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/CA:HB_CODES.csv") %>%
+#  clean_names()
+ca_hb <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/967937c4-8d67-4f39-974f-fd58c4acfda5/download/ca11_ca19.csv") %>% 
   clean_names()
 
 #Refining CA data for joining
 filtered_ca_hb <- ca_hb %>% 
   select(hb_name, ca_name, ca) %>% 
   group_by(hb_name) %>% 
-  summarize(council_area = paste(unique(ca_name), collapse = ", ")) # Combine council area names for each 
+  summarize(council_area = paste(unique(ca_name), collapse = ", ")) # Combine council area names that are under same healthboard
 
 # Joining Council Area data with the prescription data
 prescriptions_age_hb_ca <- prescriptions_age_hb %>% 
   left_join(filtered_ca_hb, by = join_by(hb_name))
 ```
 
-## Merging CVD Mortality Outcome data
-Lastly,  mortality rate from CVD was added. Filtered out the death from 2022 and the cases of death in the age group 65+. Data was joined by health board regions, summing the total number of death for indivdiuals aged 65 and older in each health board council area regions. Some CA including Na h-Eileanan Siar, Orkney Islands, Shetland Islands reported 0 cases of cardiovasculra death so they were filtered out from the analysis as it probably is like an error or there was problem in data collection.
+#### Merging CVD Mortality Outcome data
+Lastly, data from the **Scottish Heart Disease Statistics** dataset, specifically the **Heart Disease Mortality by Health Board** section, was incorporated into the analysis. The dataset was filtered to include only deaths from 2022 and individuals aged 65 and older. Mortality figures were then aggregated by health board regions, summing the total number of deaths for individuals aged 65+ within each council area. Some council areas, including Na h-Eileanan Siar, Orkney Islands, and Shetland Islands, reported zero cardiovascular deaths. These regions were excluded from the analysis, as this likely reflects data collection issues or reporting errors rather than an accurate representation of mortality rates.
 ```{r}
 #Loading CVD outcome data
-heart_mortality_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv") %>% 
+#heart_mortality_data <- read_csv("/Users/Studnet Data/Year 4/data_science/B138584/data/HeartDiseaseMortality.csv") %>% 
+#  clean_names()
+heart_mortality_data <- read_csv("https://www.opendata.nhs.scot/dataset/0e17f3fc-9429-48aa-b1ba-2b7e55688253/resource/dc0512a8-eb49-43b9-84f1-17ef95365d57/download/hd_mortalitybyhbr.csv") %>% 
   clean_names()
-
 #joining heart disease outcome by hb code
 filtered_heart_data <- heart_mortality_data %>% 
   select(year, hbr, number_of_deaths, age_group) %>% 
-  filter(age_group %in% c("75plus years", "65-74 years")) %>% #filtering for 
+  filter(age_group %in% c("75plus years", "65-74 years")) %>% #filtering for CVD death only in elder population
   filter(year == 2022) %>% 
   group_by(hbr) %>% 
-  summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE)) 
+  summarise(over_65_total_death = sum(number_of_deaths, na.rm = TRUE)) #Summing for elder population mortality per HB
   
 ```
 
-Next, the population of individuals aged 65 and older was calculated for each council area. This was done by grouping the GP-level demographic data by council area and summing the over-65 population (over_65_total) for each council area. These population metrics were then joined with the prescription dataset and the mortality dataset, ensuring a comprehensive view of prescriptions, demographics, and heart disease outcomes. 
+Next, the population of individuals aged 65 and older was calculated for each concatenated council area. This was done by grouping the GP-level demographic data by council area and summing the over-65 population (over_65_total) for each council area. These population metrics were then joined with the prescription dataset and the mortality dataset, ensuring a comprehensive view of prescriptions, demographics, and heart disease outcomes. 
 
 ```{r}
 #Creating a column that has number of population for merged council area
@@ -130,7 +138,7 @@ total_over65_ca <- prescriptions_age_hb_ca %>%
   select(council_area, gp_practice, over_65_total) %>% 
   distinct() %>% #remove duplicate
   group_by(council_area) %>% 
-  summarise(over65_CA = sum(over_65_total, na.rm = TRUE))
+  summarise(over65_CA = sum(over_65_total, na.rm = TRUE)) #Total number of elder populatino per council areas under same HB
 
 #Final Joined Data
 joined_data_final <- prescriptions_age_hb_ca %>% 
@@ -146,10 +154,11 @@ joined_data_final <- prescriptions_age_hb_ca %>%
   
 ```
 
-##Plots
+## Data Analysis
 
+#### Plots
 ```{r}
-#making table
+#making a table that shows
 joined_data_final %>% 
   mutate(prescriptions_per_death = round(paid_quantity / over65_total_death, 1)) %>%
   select(
@@ -181,21 +190,7 @@ joined_data_final %>%
     source_note = "Data source: Prescription and mortality datasets."
   )
 
-
 #scatter plot
-ggplot(joined_data_final, aes(x = over65_CA, y = over65_total_death, color = paid_quantity)) +
-  geom_point(alpha = 1, size = 4.5) +  # Scatter plot with size and color encoding
-  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed", alpha = 0.3, show.legend = FALSE) +  # Regression line
-  scale_color_gradient(low = "lightblue", high = "red") +  # Gradient for color
-  labs(
-    title = "Relationship Between Older Population, Deaths, and Prescriptions",
-    x = "Population Aged 65+",
-    y = "Cardiovascular Deaths",
-    size = "Prescriptions",
-    color = "Prescriptions"
-  ) +
-  theme_minimal()
-
 ggplot(joined_data_final, aes(x = over65_CA, y = paid_quantity, color = over65_total_death)) +
   geom_point(alpha = 1, size = 4.5) +  # Scatter plot with size and color encoding
   geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed", alpha = 0.3, show.legend = FALSE) +  # Regression line
@@ -213,7 +208,6 @@ ggplot(joined_data_final, aes(x = over65_CA, y = paid_quantity, color = over65_t
 The plot clearly demonstrates a strong linear relationship between the elderly population and antihypertensive prescriptions, highlighting that regions with larger elderly populations tend to have higher prescription volumes. Cardiovascular deaths, represented by color intensity (with red indicating higher deaths), also appear to increase in regions with higher prescription volumes. This reflects the significant burden of cardiovascular disease (CVD) among the elderly. While the overall trend aligns with expectations, the observed deviations suggest potential disparities in healthcare access or effectiveness that warrant further investigation.
 
 ## Deprivation and Its Relationship with CVD
-
 The data also reveals a trend where regions with larger elderly populations tend to have higher cardiovascular deaths. To further explore additional factors influencing this relationship, deprivation was considered as a potential driver of disparities in CVD outcomes. Previous research has shown that individuals living in the most deprived communities are 30% more likely to have high blood pressure, one of the strongest risk factors for CVD. Additionally, CVD is known to occur more frequently in lower-income, more deprived areas.
 
 To investigate this, the Scottish Index of Multiple Deprivation (SIMD) data was incorporated. SIMD ranks regions in Scotland from most deprived (rank 1) to least deprived (higher ranks) based on factors such as access to services, crime, education, employment, health, housing, and income. This analysis aims to determine whether regions with higher deprivation scores exhibit trends in prescription volumes and CVD deaths, providing further insights into the intersection of deprivation, hypertension, and cardiovascular health outcomes.
@@ -223,7 +217,10 @@ SIMD dataset was loaded and cleaned for analysis. Since the SIMD data includes q
 To achieve this, the SIMD data was joined with Health Board names to align it with the prescription and council area datasets. Subsequently, the council area dataset was linked to the summarized SIMD data, enabling the integration of deprivation scores with demographic and prescription trends. Finally, the complete dataset, containing council areas, prescriptions, cardiovascular deaths, and SIMD ranks, was constructed for further analysis.
 #I've made coucnil are that are under same healthbaord into one row, treating them as one region for the analysis. Thus
 ```{r}
-SIMD <- read_csv(here("/Users/Studnet Data/Year 4/data_science/B138584/data/SIMD.csv")) %>%
+#SIMD <- read_csv(here("/Users/Studnet Data/Year 4/data_science/B138584/data/SIMD.csv")) %>%
+#  clean_names()
+
+SIMD <- read_csv("https://www.opendata.nhs.scot/dataset/78d41fa9-1a62-4f7b-9edb-3e8522a93378/resource/acade396-8430-4b34-895a-b3e757fa346e/download/simd2020v2_22062020.csv") %>%
   clean_names()
 
 #Filtering out SIMD and linking to CA
@@ -231,7 +228,7 @@ SIMD_Filtered <- SIMD %>%
   left_join(filtered_hb_name, by = join_by(hb == hbt)) %>%
   select(hb_name, simd2020v2ca_quintile) %>%
   group_by(hb_name) %>% 
-  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE))
+  summarise(mean_simd_rank = mean(simd2020v2ca_quintile, na.rm = TRUE)) 
 
 SiMD_CA_relation <- SIMD_Filtered %>%   
   left_join(filtered_ca_hb, by = join_by(hb_name)) 
@@ -241,8 +238,6 @@ joined_data_final_CA <- joined_data_final %>%
 ```
 
 ## Correlation Analysis
-
-
 Some correlation analyses were performed to examine the relationships between the variables presented in this study. Pearson's correlation analysis was chosen as it is well-suited for continuous variables, providing a measure of the linear relationship between them [(Sereno, 2021)](https://www.analyticsvidhya.com/blog/2021/03/comparison-of-pearson-and-spearman-correlation-coefficients/). These tests were used to assess the strength and direction of associations, such as between the elderly population and cardiovascular deaths, as well as between deprivation and antihypertensive prescriptions, offering valuable insights into potential trends and disparities.
 
 The first test assessed whether regions with larger older populations exhibited higher prescription volumes, while the second and third tests examined the impact of deprivation on prescription rates and cardiovascular mortality, respectively. These analyses provide valuable insights into the potential drivers of healthcare needs and health disparities across regions."
@@ -279,10 +274,9 @@ The deprivation and cvd death showed no linear correlation (r = 0.002, p = 0.99)
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 ## Conclusion
-
+This study explored the relationships between antihypertensive prescriptions, elderly populations, deprivation, and cardiovascular health across council areas in Scotland. The findings showed a strong link between larger elderly populations and higher prescription volumes, reflecting the growing healthcare needs of aging communities. However, deprivation did not show a clear connection to either prescription rates or cardiovascular deaths, which may reflect the equalizing role of Scotland's healthcare system. The analysis was limited to one year and a single month of data, and the deprivation measure (SIMD) combines multiple factors, which may obscure specific influences. Future research could explore these trends over time, consider additional factors like healthcare access and medication adherence, and investigate how deprivation interacts with aging to affect health outcomes. This study highlights the importance of addressing the needs of older populations while continuing to explore broader social determinants of health.
 
 ## References
-
 British Heart Foundation (2018). The CVD Challenge in Scotland. [online] British Heart Foundation. Available at: https://www.bhf.org.uk/for-professionals/healthcare-professionals/data-and-statistics/the-cvd-challenge/the-cvd-challenge-in-scotland.
 
 Fuchs, F.D. and Whelton, P.K. (2020). High Blood Pressure and Cardiovascular Disease. Hypertension, [online] 75(2), pp.285–292. doi:https://doi.org/10.1161/HYPERTENSIONAHA.119.14240.
